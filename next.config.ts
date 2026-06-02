@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    // !! WARNING !!
-    // بالتعديل ده بنقول لـ Next.js كملي الـ Build حتى لو فيه إيرور في الـ TypeScript
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       {
