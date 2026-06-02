@@ -122,7 +122,7 @@ export default function MenuPage() {
         <CategoryNav
           categories={categories}
           active={activeCategory}
-          onSelect={setActiveCategory}
+         onSelect={(cat) => setActiveCategory(cat as number | "all")}
           isLoading={categoriesLoading}
         />
 
