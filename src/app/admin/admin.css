@@ -1,0 +1,539 @@
+/* ============================================================
+   admin.css — styles خاصة بالـ Admin Panel
+   مفيش علاقة بالـ globals.css بتاع الموقع العادي
+   ============================================================ */
+
+/* ── Variables ── */
+:root {
+  --adm-bg:       #0a0a0a;
+  --adm-surface:  #111111;
+  --adm-card:     #161616;
+  --adm-border:   #222222;
+  --adm-gold:     #D4AF37;
+  --adm-gold-dim: rgba(212,175,55,0.1);
+  --adm-text:     #E8E8E8;
+  --adm-muted:    #666666;
+  --adm-sidebar:  200px;
+  --adm-tr:       0.3s ease;
+  --adm-green:    #22c55e;
+  --adm-red:      #ef4444;
+  --adm-yellow:   #f59e0b;
+  --adm-blue:     #3b82f6;
+}
+
+/* ── Reset للأدمن ── */
+.adm-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Layout الرئيسي ── */
+.adm-wrap {
+  display: flex;
+  min-height: 100vh;
+  background: var(--adm-bg);
+  color: var(--adm-text);
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ── Sidebar (الوضع الافتراضي للشاشات الكبيرة) ── */
+.adm-sidebar {
+  width: var(--adm-sidebar);
+  background: var(--adm-surface);
+  border-right: 1px solid var(--adm-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: left var(--adm-tr); /* تم التعديل هنا ليتماشى مع الموبيل */
+}
+
+.adm-logo {
+  padding: 1.5rem 1.2rem;
+  border-bottom: 1px solid var(--adm-border);
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--adm-gold);
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.adm-logo span {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  color: var(--adm-muted);
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+/* ── Nav Links ── */
+.adm-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+
+.adm-nav-section {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--adm-muted);
+  padding: 0.8rem 1.2rem 0.4rem;
+}
+
+.adm-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 1.2rem;
+  color: var(--adm-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: all var(--adm-tr);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  width: 100%;
+  background: none;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  font-family: inherit;
+  text-align: left;
+}
+
+.adm-nav-link:hover {
+  color: var(--adm-text);
+  background: rgba(255,255,255,0.03);
+}
+
+.adm-nav-link.active {
+  color: var(--adm-gold);
+  border-left-color: var(--adm-gold);
+  background: var(--adm-gold-dim);
+}
+
+.adm-nav-link i { width: 16px; text-align: center; font-size: 0.85rem; }
+
+/* ── Sidebar Footer ── */
+.adm-sidebar-footer {
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--adm-border);
+}
+
+.adm-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.9rem;
+  color: var(--adm-muted);
+  font-size: 0.8rem;
+  border-radius: 8px;
+  transition: all var(--adm-tr);
+  cursor: pointer;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+}
+
+.adm-logout:hover { color: var(--adm-red); background: rgba(239,68,68,0.08); }
+
+/* ── Main Content ── */
+.adm-main {
+  margin-left: var(--adm-sidebar);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Top Bar ── */
+.adm-topbar {
+  height: 60px;
+  background: var(--adm-surface);
+  border-bottom: 1px solid var(--adm-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.adm-topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--adm-text);
+}
+
+.adm-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.adm-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--adm-gold-dim);
+  border: 1px solid var(--adm-gold);
+  display: grid;
+  place-items: center;
+  color: var(--adm-gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* ── Page Content ── */
+.adm-content { padding: 1.5rem; flex: 1; }
+
+/* ── Stats Cards ── */
+.adm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.adm-stat-card {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all var(--adm-tr);
+}
+
+.adm-stat-card:hover { border-color: var(--adm-gold); }
+
+.adm-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.adm-stat-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--adm-text);
+  line-height: 1;
+}
+
+.adm-stat-lbl {
+  font-size: 0.72rem;
+  color: var(--adm-muted);
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Table ── */
+.adm-table-wrap {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.adm-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--adm-border);
+}
+
+.adm-table-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--adm-muted);
+  border-bottom: 1px solid var(--adm-border);
+  background: var(--adm-surface);
+}
+
+td {
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--adm-border);
+  color: var(--adm-text);
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── Badges / Status ── */
+.adm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 50px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.adm-badge.green  { background: rgba(34,197,94,0.1);   color: var(--adm-green);  }
+.adm-badge.yellow { background: rgba(245,158,11,0.1);  color: var(--adm-yellow); }
+.adm-badge.red    { background: rgba(239,68,68,0.1);   color: var(--adm-red);    }
+.adm-badge.blue   { background: rgba(59,130,246,0.1);  color: var(--adm-blue);   }
+.adm-badge.gold   { background: var(--adm-gold-dim);   color: var(--adm-gold);   }
+
+/* ── Action Buttons ── */
+.adm-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--adm-tr);
+  border: none;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.adm-btn.primary { background: var(--adm-gold); color: #000; }
+.adm-btn.primary:hover { background: #e5c158; transform: translateY(-1px); }
+.adm-btn.ghost { background: transparent; color: var(--adm-muted); border: 1px solid var(--adm-border); }
+.adm-btn.ghost:hover { color: var(--adm-text); border-color: var(--adm-text); }
+.adm-btn.danger { background: transparent; color: var(--adm-red); border: 1px solid rgba(239,68,68,0.3); }
+.adm-btn.danger:hover { background: rgba(239,68,68,0.1); }
+
+/* ── Form ── */
+.adm-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.adm-form-group label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--adm-muted);
+}
+
+.adm-form-group input,
+.adm-form-group select,
+.adm-form-group textarea {
+  background: var(--adm-bg);
+  border: 1px solid var(--adm-border);
+  border-radius: 8px;
+  color: var(--adm-text);
+  padding: 0.7rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color var(--adm-tr);
+  width: 100%;
+}
+
+.adm-form-group input:focus,
+.adm-form-group select:focus,
+.adm-form-group textarea:focus {
+  border-color: var(--adm-gold);
+}
+
+/* ── Login Page ── */
+.adm-login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--adm-bg);
+  padding: 1rem;
+}
+
+.adm-login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.adm-login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--adm-gold), transparent);
+}
+
+/* ── Empty State ── */
+.adm-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--adm-muted);
+}
+
+.adm-empty i { font-size: 2.5rem; display: block; margin-bottom: 1rem; opacity: 0.3; }
+.adm-empty p { font-size: 0.85rem; }
+
+
+/* ============================================================
+   ── Responsive Design (تجاوب الموبيل الموحد والنظيف) ──
+   ============================================================ */
+
+@media (max-width: 991px) {
+  
+  /* 1️⃣ ترتيب الكونتير الرئيسي ليصبح رأسي */
+  .adm-wrap {
+    flex-direction: column !important;
+    display: block !important;
+    min-height: 100vh;
+  }
+
+  /* 2️⃣ الهيدر العلوي الخاص بالموبيل */
+  .adm-mobile-header {
+    display: flex !important;
+    align-items: center;
+    background-color: var(--adm-surface);
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--adm-border);
+    color: var(--adm-text);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    width: 100% !important;
+  }
+
+  .menu-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--adm-gold);
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 15px;
+  }
+
+  .mobile-title {
+    font-weight: bold;
+    font-size: 18px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* 3️⃣ كود إجبار المحتوى الرئيسي على ملء الشاشة والغاء المارجن القديم */
+  .adm-main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important; 
+    padding: 15px !important; 
+    display: block !important;
+  }
+
+  /* ضبط الكروت والجداول */
+  .adm-content, .adm-stats, .adm-table-wrap {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .adm-stats { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+
+  th, td { 
+    padding: 0.6rem 0.5rem !important; 
+    font-size: 0.75rem !important; 
+  }
+
+  /* 4️⃣ السايدبار (Drawer منبثق سليم 100% وبدون تداخل الأنماط) */
+  .adm-sidebar {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: -200px; /* مستخبي على قد عرضه بالظبط المكتوب في الفاريابل */
+    width: var(--adm-sidebar) !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    background: var(--adm-surface) !important;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+    display: flex !important; 
+    flex-direction: column !important;
+    transform: none !important; /* لغينا الترانسفورم القديم اللي كان بيطرد اللينكات */
+    transition: left var(--adm-tr) !important;
+  }
+
+  /* كلاس الفتح عند الضغط على الـ Burger Icon */
+  .adm-sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  /* 🎯 إجبار اللينكات والمسارات على الظهور التام داخل المنيو */
+  .adm-sidebar .adm-nav {
+    display: block !important;
+    padding: 1rem 0 !important;
+  }
+
+  .adm-sidebar .adm-nav-section {
+    display: block !important;
+  }
+
+  .adm-sidebar .adm-nav-link {
+    display: flex !important;
+    color: var(--adm-muted);
+  }
+
+  .adm-sidebar .adm-nav-link.active {
+    color: var(--adm-gold) !important;
+    background: var(--adm-gold-dim) !important;
+  }
+
+  /* زرار القفل (X) لغلق السايدبار */
+  .adm-sidebar-close {
+    display: block !important;
+    background: none;
+    border: none;
+    color: var(--adm-text);
+    font-size: 18px;
+    position: absolute;
+    right: 15px;
+    top: 22px;
+    cursor: pointer;
+  }
+
+  /* الخلفية السوداء الشفافة */
+  .adm-sidebar-overlay {
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.7) !important;
+    z-index: 999 !important;
+  }
+}
+
+/* ── إخفاء عناصر الموبيل على الديسك توب ── */
+.adm-sidebar-close, .adm-mobile-header, .adm-sidebar-overlay {
+  display: none;
+}

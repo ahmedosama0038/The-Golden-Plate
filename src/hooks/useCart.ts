@@ -1,0 +1,47 @@
+// ============================================================
+//  hooks/useCart.ts — Custom Hook للكارت
+//  بيجمع كل عمليات الكارت في مكان واحد
+// ============================================================
+import { useAppDispatch, useAppSelector } from './redux'
+import {
+  addItem, removeItem, updateQuantity,
+  clearCart, toggleCart, openCart, closeCart,
+  selectCartItems, selectCartCount, selectCartTotal, selectCartIsOpen,
+} from '@/store/slices/cartSlice'
+import type { CartItem, MenuItem, MenuItemSize } from '@/types'
+
+export function useCart() {
+  const dispatch = useAppDispatch()
+  const items    = useAppSelector(selectCartItems)
+  const count    = useAppSelector(selectCartCount)
+  const total    = useAppSelector(selectCartTotal)
+  const isOpen   = useAppSelector(selectCartIsOpen)
+
+  const addToCart = (item: MenuItem, selectedSize?: MenuItemSize) => {
+    const price      = selectedSize ? selectedSize.price : item.price
+    const cartItemId = selectedSize ? `${item.id}_${selectedSize.label}` : item.id
+    const cartItem: CartItem = {
+      id: cartItemId, menuItemId: item.id,
+      name: item.name, price, image: item.image,
+      quantity: 1, size: selectedSize?.label,
+    }
+    dispatch(addItem(cartItem))
+  }
+
+  const removeFromCart  = (id: string) => dispatch(removeItem(id))
+  const changeQuantity  = (id: string, qty: number) => dispatch(updateQuantity({ id, quantity: qty }))
+  const emptyCart       = () => dispatch(clearCart())
+  const toggle          = () => dispatch(toggleCart())
+  const open            = () => dispatch(openCart())
+  const close           = () => dispatch(closeCart())
+
+  const buildWhatsAppMessage = (waNumber: string, currency: string) => {
+    const lines = items.map(
+      (i) => `• ${i.name}${i.size ? ` (${i.size})` : ''} x${i.quantity} = ${currency}${(i.price * i.quantity).toFixed(2)}`
+    )
+    const msg = ['🍽️ *New Order — The Golden Plate*', '', ...lines, '', `*Total: ${currency}${total.toFixed(2)}*`].join('\n')
+    return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`
+  }
+
+  return { items, count, total, isOpen, addToCart, removeFromCart, changeQuantity, emptyCart, toggle, open, close, buildWhatsAppMessage }
+}
