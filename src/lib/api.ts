@@ -6,7 +6,7 @@ const isServer = typeof window === "undefined";
 
 export const api = axios.create({
   baseURL: isServer
-    ? "https://YOUR-DOMAIN.vercel.app/api/remote"
+    ? "https://the-golden-plate.vercel.app/api/remote"
     : "/api/remote",
 });
 // Interceptor — بيضيف الـ token تلقائي في كل request (شغال زي ما هو ومفيهوش أي مشكلة)
