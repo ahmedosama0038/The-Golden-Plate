@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { CreateProductDto } from '@/types'
 import axios from 'axios'
 import { ReservationData, ReviewData } from './schemas'
