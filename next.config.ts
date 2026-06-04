@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ❌ شيلنا standalone عشان بيكسر مع middleware
-  // output: 'standalone',
-
+ 
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -29,10 +27,6 @@ const nextConfig = {
     ];
   },
 
-  // ❌ مهم: مفيش Turbo خالص
-  // experimental: {
-  //   turbo: {}
-  // }
 };
 
 export default nextConfig;

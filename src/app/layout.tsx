@@ -2,6 +2,7 @@
 //  app/layout.tsx — الـ Root Layout
 //  بيلف كل الـ app — بيتحمّل مرة واحدة بس
 // ============================================================
+export const dynamic = "force-dynamic";
 import type { Metadata } from 'next'
 import './globals.css'
 // 💡 1. استيراد الـ Providers الشامل الجديد من الـ lib

@@ -2,12 +2,13 @@ import { CreateProductDto } from '@/types'
 import axios from 'axios'
 import { ReservationData, ReviewData } from './schemas'
 
-// 🎯 التعديل السحري: غيرنا الـ baseURL عشان يمر عبر الـ Proxy بتاع Next.js
-// وبكده الـ CORS هيموت تماماً في كل الـ Endpoints (حجوزات، ريفيوز، عملاء... إلخ)
-const api = axios.create({
-  baseURL: '/api/remote',
-})
+const isServer = typeof window === "undefined";
 
+export const api = axios.create({
+  baseURL: isServer
+    ? "https://YOUR-DOMAIN.vercel.app/api/remote"
+    : "/api/remote",
+});
 // Interceptor — بيضيف الـ token تلقائي في كل request (شغال زي ما هو ومفيهوش أي مشكلة)
 api.interceptors.request.use((config) => {
   const token = typeof document !== 'undefined'
@@ -116,7 +117,7 @@ export const reviewApi = {
     const response = await api.get('/Review')
     return response.data.data || response.data
   },
-  create: async (data: any) => {
+  create: async (data: ReviewData) => {
   const response = await api.post('/Review', data)
   return response.data
 },
