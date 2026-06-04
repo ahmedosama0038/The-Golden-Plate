@@ -116,10 +116,10 @@ export const reviewApi = {
     const response = await api.get('/Review')
     return response.data.data || response.data
   },
-  create: async (data: ReviewData) => {
-    const response = await api.post('/Review', data)
-    return response.data
-  },
+  create: async (data: any) => {
+  const response = await api.post('/Review', data)
+  return response.data
+},
   delete: async (id: string | number) => {
     const numericId = Number(id)
     return api.delete(`/Review/${numericId}`)

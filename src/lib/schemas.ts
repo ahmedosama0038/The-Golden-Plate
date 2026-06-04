@@ -12,7 +12,7 @@ export type LoginData = z.infer<typeof loginSchema>
 export const reservationSchema = z.object({
   customerName:   z.string().min(2, 'Name is required'),
   customerPhone:  z.string().min(10, 'Phone number is required'),
-  customerCity:   z.string().min(2, 'City is required'),
+     address:        z.string().min(2,  'Address is required'),  // ← address مش customerCity
   numberOfGuests: z.number().min(1, 'Number of guests is required'),
   dateOnly:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   timeOnly:       z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
@@ -22,11 +22,9 @@ export type ReservationData = z.infer<typeof reservationSchema>
 
 // ─── Review ──────────────────────────────────────────────────
 export const reviewSchema = z.object({
-  customerName:  z.string().min(2, 'Name is required'),
+  customerName:  z.string().min(2,  'Name is required'),
   customerPhone: z.string().min(10, 'Phone is required'),
   rating:        z.coerce.number().min(1).max(5),
-  // z.coerce.number() = بيحوّل الـ string لـ number تلقائي
-  // مهم عشان الـ select بيرجع string مش number
   comment:       z.string().min(10, 'Review must be at least 10 characters'),
 })
 
