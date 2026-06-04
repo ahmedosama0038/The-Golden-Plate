@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // 👈 ضيف السطر ده هنا
+  output: 'standalone', 
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -26,6 +26,13 @@ const nextConfig = {
       },
     ]
   },
+
+  // 🛠️ الحل القاضي للبوج بتاعة الـ Middleware والـ Turbopack على Vercel
+  experimental: {
+    turbo: {
+      rules: {}
+    }
+  }
 };
 
 export default nextConfig;
