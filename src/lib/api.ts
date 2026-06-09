@@ -1,5 +1,6 @@
+// ─── Menu ───────────────────────────────────────────────────
 export const dynamic = "force-dynamic";
-import { CreateProductDto } from '@/types'
+import { CreateProductDto, Extra, CreateExtraDto } from '@/types'
 import axios from 'axios'
 import { ReservationData, ReviewData } from './schemas'
 
@@ -10,6 +11,7 @@ export const api = axios.create({
     ? "https://myrestaurant.runasp.net/api"
     : "/api/remote",
 });
+
 // Interceptor — بيضيف الـ token تلقائي في كل request (شغال زي ما هو ومفيهوش أي مشكلة)
 api.interceptors.request.use((config) => {
   const token = typeof document !== 'undefined'
@@ -119,9 +121,9 @@ export const reviewApi = {
     return response.data.data || response.data
   },
   create: async (data: ReviewData) => {
-  const response = await api.post('/Review', data)
-  return response.data
-},
+    const response = await api.post('/Review', data)
+    return response.data
+  },
   delete: async (id: string | number) => {
     const numericId = Number(id)
     return api.delete(`/Review/${numericId}`)
@@ -146,4 +148,40 @@ export const customerApi = {
     const response = await api.get(`/Customer/search/${phone}`)
     return response.data.data
   },
+}
+
+// ── 6️⃣ خدمات الإضافات (Extra) ──
+export const extraApi = {
+  // 1. GET ALL EXTRAS
+  getAll: async (): Promise<Extra[]> => {
+    const response = await api.get('/Extra')
+    return response.data.data || response.data
+  },
+
+  // 2. POST (ADD NEW EXTRA)
+  create: async (data: CreateExtraDto) => {
+    return api.post('/Extra', data)
+  },
+
+  // 3. GET AVAILABLE EXTRAS ONLY
+  getAvailable: async (): Promise<Extra[]> => {
+    const response = await api.get('/Extra/AvailableExtras')
+    return response.data.data || response.data
+  },
+
+  // 4. GET EXTRA BY ID
+  getById: async (id: string | number): Promise<Extra> => {
+    const response = await api.get(`/Extra/${id}`)
+    return response.data.data || response.data
+  },
+
+  // 5. PUT (UPDATE EXTRA)
+  update: async (id: string | number, data: CreateExtraDto) => {
+    return api.put(`/Extra/${id}`, data)
+  },
+
+  // 6. DELETE EXTRA
+  delete: async (id: string | number) => {
+    return api.delete(`/Extra/${id}`)
+  }
 }

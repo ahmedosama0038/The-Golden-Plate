@@ -1,4 +1,3 @@
-
 // ─── Menu ───────────────────────────────────────────────────
 export type MenuCategory = 'starters' | 'mains' | 'desserts' | 'drinks'
 // 'type' هنا لأننا بنحدد "اختيار من عدة قيم" مش object
@@ -8,6 +7,7 @@ export interface MenuItemSize {
   name?: string;    
   price: number;
 }
+
 // types/index.ts — أضيف الـ fields الجديدة
 export interface MenuItem {
   id:           string | number
@@ -25,7 +25,9 @@ export interface MenuItem {
   featured?:    boolean
   available?:   boolean
   discount?:    number
+  extras?:      Extra[]       // ← ربط الإضافات بالوجبة بشكل اختياري لمنع الإيرورز
 }
+
 // ─── Cart ───────────────────────────────────────────────────
 export interface CartItem {
   id: string          
@@ -35,6 +37,7 @@ export interface CartItem {
   image: string
   quantity: number
   size?: string
+  selectedExtras?: Extra[] // ← تسجيل الإضافات المختار في الكارت بشكل اختياري
 }
 
 // ─── Order ──────────────────────────────────────────────────
@@ -172,8 +175,9 @@ export interface ReservationFormData {
   guests: string
   notes?: string
 }
+
 export interface Category {
-   id:            number
+  id:            number
   name:          string
   categoryImage: string | null  // الاسم الحقيقي من الـ API
 }
@@ -185,4 +189,26 @@ export interface CreateProductDto {
   categoryId:  number
   priceList:   { price: number; size: number }[]
   ingredients: string[]
+}
+
+// ─── Extras (الإضافات الجديدة) ─────────────────────────────────
+export interface Extra {
+  id: string | number
+  name: string
+  price: number
+  isAvailableAlone: boolean
+  isDeleted?: boolean        // ← أضف السطر ده
+  createdAt?: string
+}
+export interface CreateExtraDto {
+  name: string
+  price: number
+  isAvailableAlone: boolean 
+}
+
+
+export type ExtraFormData = {
+  name: string
+  price: number
+  isAvailableAlone: boolean
 }

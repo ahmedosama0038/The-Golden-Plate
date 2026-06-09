@@ -56,10 +56,17 @@ export default function CartSidebar() {
             items.map((item) => (
               <div key={item.id} className="cart-item">
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="cart-item-name">
-                    {item.name}
-                    {item.size && <span className="size-tag">{item.size}</span>}
-                  </div>
+                 <div className="cart-item-name">
+  {item.name}
+  {item.size && <span className="size-tag">{item.size}</span>}
+  
+  {/* ← أضف السطر ده */}
+  {item.selectedExtras && item.selectedExtras.length > 0 && (
+    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+      + {item.selectedExtras.map(e => e.name).join(', ')}
+    </div>
+  )}
+</div>
                   <div className="cart-item-price">
                     {CURRENCY}{item.price.toFixed(2)} each
                   </div>

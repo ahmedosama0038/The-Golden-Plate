@@ -8,7 +8,7 @@ import {
   clearCart, toggleCart, openCart, closeCart,
   selectCartItems, selectCartCount, selectCartTotal, selectCartIsOpen,
 } from '@/store/slices/cartSlice'
-import type { CartItem, MenuItem, MenuItemSize } from '@/types'
+import type { CartItem, MenuItem, MenuItemSize, Extra } from '@/types'
 
 export function useCart() {
   const dispatch = useAppDispatch()
@@ -16,17 +16,23 @@ export function useCart() {
   const count    = useAppSelector(selectCartCount)
   const total    = useAppSelector(selectCartTotal)
   const isOpen   = useAppSelector(selectCartIsOpen)
+const addToCart = (item: MenuItem, selectedSize?: MenuItemSize, selectedExtras?: Extra[]) => {
+  const extrasTotal = selectedExtras?.reduce((sum, e) => sum + e.price, 0) ?? 0
+  const price       = (selectedSize ? selectedSize.price : item.price) + extrasTotal
+  const cartItemId  = selectedSize ? `${item.id}_${selectedSize.label}` : item.id
 
-  const addToCart = (item: MenuItem, selectedSize?: MenuItemSize) => {
-    const price      = selectedSize ? selectedSize.price : item.price
-    const cartItemId = selectedSize ? `${item.id}_${selectedSize.label}` : item.id
-    const cartItem: CartItem = {
-      id: cartItemId, menuItemId: item.id,
-      name: item.name, price, image: item.image,
-      quantity: 1, size: selectedSize?.label,
-    }
-    dispatch(addItem(cartItem))
+  const cartItem: CartItem = {
+    id:          String(cartItemId),
+    menuItemId:  String(item.id),
+    name:        item.name,
+    price,
+    image:       item.image,
+    quantity:    1,
+    size:        selectedSize?.label,
+    selectedExtras: selectedExtras ?? [],  // ← حفظ الإضافات في الكارت
   }
+  dispatch(addItem(cartItem))
+}
 
   const removeFromCart  = (id: string) => dispatch(removeItem(id))
   const changeQuantity  = (id: string, qty: number) => dispatch(updateQuantity({ id, quantity: qty }))

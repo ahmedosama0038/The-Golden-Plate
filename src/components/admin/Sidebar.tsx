@@ -19,6 +19,7 @@ const NAV = [
     links: [
       { href: '/admin/menu',         label: 'Menu Items',   icon: 'fa-solid fa-utensils'      },
       { href: '/admin/categories',   label: 'Categories',   icon: 'fa-solid fa-folder-open'   },
+      { href: '/admin/extras',       label: 'Extras',       icon: 'fa-solid fa-plus-minus'    }, // ← أضفنا الإضافات هنا يا أبو حميد!
       { href: '/admin/hero',         label: 'Hero Section', icon: 'fa-solid fa-image'         },
       { href: '/admin/about',        label: 'About Page',   icon: 'fa-solid fa-circle-info'   },
       { href: '/admin/contact-info', label: 'Contact Info', icon: 'fa-solid fa-phone'         },

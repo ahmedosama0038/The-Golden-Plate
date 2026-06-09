@@ -1,43 +1,64 @@
-
-// ============================================================
-//  SizeModal.tsx — الـ popup لما الأيتم عنده أحجام
-//  نفس .size-modal-overlay من style.css
-// ============================================================
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MenuItem, MenuItemSize } from '@/types'
+import { useQuery } from '@tanstack/react-query'
+import { MenuItem, MenuItemSize, Extra } from '@/types'
+import { extraApi } from '@/lib/api'
 
 interface Props {
-  item: MenuItem | null      // الأيتم المختار (null = المودال مغلق)
+  item: MenuItem | null
   onClose: () => void
-  onAdd: (item: MenuItem, size: MenuItemSize) => void
+  onAdd: (item: MenuItem, size: MenuItemSize, extras: Extra[]) => void
 }
 
 export default function SizeModal({ item, onClose, onAdd }: Props) {
   const [selected, setSelected] = useState<MenuItemSize | null>(null)
+  const [selectedExtras, setSelectedExtras] = useState<Extra[]>([])
+
+  const { data: extras = [] } = useQuery<Extra[]>({
+    queryKey: ['extras'],
+    queryFn: async () => {
+      const res = await extraApi.getAll()
+      return res.filter((e: Extra) => !e.isDeleted && e.isAvailableAlone)
+    },
+  })
 
   useEffect(() => {
     setSelected(null)
+    setSelectedExtras([])
   }, [item])
 
-  // لو مفيش item = المودال مغلق
   if (!item) return null
+
+  const toggleExtra = (extra: Extra) => {
+    setSelectedExtras(prev =>
+      prev.find(e => e.id === extra.id)
+        ? prev.filter(e => e.id !== extra.id)
+        : [...prev, extra]
+    )
+  }
 
   const handleAdd = () => {
     if (!selected) return
-    onAdd(item, selected)
+    onAdd(item, selected, selectedExtras)
     setSelected(null)
+    setSelectedExtras([])
     onClose()
   }
 
+  const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price, 0)
+  const total = (selected?.price ?? 0) + extrasTotal
+
   return (
-    // .size-modal-overlay.open
     <div
       className="size-modal-overlay open"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="size-modal">
+      <div className="size-modal" style={{
+        maxHeight: '90vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
 
         {/* Header */}
         <div className="size-modal-header">
@@ -47,28 +68,97 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
           </button>
         </div>
 
-        {/* Body — قائمة الأحجام */}
-        <div className="size-modal-body">
+        {/* Body — بيتسكرول */}
+        <div className="size-modal-body" style={{
+          overflowY: 'auto',
+          flex: 1
+        }}>
+
+          {/* الأحجام */}
           {item.sizes?.map((size) => (
             <div
               key={size.label}
-              // .size-option + .selected لو هو المختار
               className={`size-option${selected?.label === size.label ? ' selected' : ''}`}
               onClick={() => setSelected(size)}
             >
               <span className="size-option-label">{size.label}</span>
-              <span className="size-option-price">${size.price}</span>
+              <span className="size-option-price">{size.price} ج.م</span>
             </div>
           ))}
 
-          {/* زرار Add */}
-          <button
-            className="size-modal-add"
-            disabled={!selected}
-            onClick={handleAdd}
-          >
-            Add to Order
-          </button>
+          {/* الإضافات */}
+          {extras.length > 0 && (
+            <>
+              <p style={{
+                margin: '1rem 0 0.5rem',
+                fontWeight: 600,
+                color: 'var(--gold)'
+              }}>
+                Extras
+              </p>
+
+              {extras.map((extra) => {
+                const isChecked = !!selectedExtras.find(e => e.id === extra.id)
+                return (
+                  <div
+                    key={extra.id}
+                    className={`size-option${isChecked ? ' selected' : ''}`}
+                    onClick={() => toggleExtra(extra)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className="size-option-label">
+                      {isChecked && (
+                        <i className="fa-solid fa-check"
+                           style={{ marginRight: '0.4rem', color: 'var(--gold)' }}
+                        />
+                      )}
+                      {extra.name}
+                    </span>
+                    <span className="size-option-price">+{extra.price} ج.م</span>
+                  </div>
+                )
+              })}
+            </>
+          )}
+
+          {/* السعر الكلي */}
+          {selected && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '0.8rem 0',
+              borderTop: '1px solid var(--card-border)',
+              marginTop: '0.5rem',
+              fontWeight: 600,
+              color: 'var(--gold)'
+            }}>
+              <span>Total</span>
+              <span>{total} ج.م</span>
+            </div>
+          )}
+
+        </div>
+
+        {/* زرار Add — ثابت برا الـ body */}
+        <div style={{ padding: '1rem' }}>
+        <button
+  className="size-modal-add"
+  disabled={!selected}
+  onClick={handleAdd}
+  style={{
+    width: '100%',
+    padding: '0.8rem',
+    background: 'var(--gold)',
+    color: '#000',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: 700,
+    cursor: selected ? 'pointer' : 'not-allowed',
+    opacity: selected ? 1 : 0.5,
+  }}
+>
+  Add to Order
+</button>
         </div>
 
       </div>

@@ -5,7 +5,7 @@ import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useAnimate } from '@/hooks/useAnimate'
-import { reviewApi } from '@/lib/api'
+import { api, reviewApi } from '@/lib/api'
 import { toast } from '@/lib/toast'
 
 // 🎯 استدعاء السكيمة والـ Type اللي أنت عاملهم في ملف السكيمات بتاعك
@@ -68,22 +68,29 @@ export default function ReviewsSection({ productId }: { productId?: number }) {
 
   // ── 2. دالة الـ Submit النظيفة (البيانات بتجيلها متفلترة وجاهزة) ──
   // ── دالة الـ Submit المعدلة ──
-  const onSubmit = (data: ReviewData) => {
-    // نضمن إن الـ ProductId رقم صريح ومش String
-    const cleanProductId = Number(productId) || 5
+ const onSubmit = async (data: ReviewData) => {
+  const cleanProductId = Number(productId) || 1
 
-    const realPayload = {
-      rating:        Number(data.rating), // 👈 تحويل الـ Rating لرقم صريح (Integer) عشان السيرفر ما يضربش 500
-      comment:       data.comment.trim(),
-      customerName:  data.customerName.trim(),
-      customerPhone: data.customerPhone.trim(),
-    
-      productId:     cleanProductId,      // 👈 رقم صريح
-    }
-
-    console.log("Sending official Swagger payload:", realPayload)
-    createMutation.mutate(realPayload)
+  // ── تأكد إن الـ Customer موجود الأول ──
+  try {
+    await api.post('/Customer', {
+      name: data.customerName.trim(),
+      phone: data.customerPhone.trim(),
+    })
+  } catch {
+    // لو الـ Customer موجود أصلاً → مش مشكلة، كمّل
   }
+
+  const realPayload = {
+    rating:        Number(data.rating),
+    comment:       data.comment.trim(),
+    customerName:  data.customerName.trim(),
+    customerPhone: data.customerPhone.trim(),
+    productId:     cleanProductId,
+  }
+
+  createMutation.mutate(realPayload)
+}
   return (
     <>
       {/* ── Reviews Display ── */}

@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect }          from 'react'
 import { useQuery }                   from '@tanstack/react-query'
 import { productApi, categoryApi }    from '@/lib/api'
-import type { MenuItem, MenuItemSize, Category } from '@/types'
+import type { MenuItem, MenuItemSize, Category, Extra } from '@/types'
 import { useCart }    from '@/hooks/useCart'
 import { useAnimate } from '@/hooks/useAnimate'
 import CategoryNav    from '@/components/menu/CategoryNav'
@@ -76,13 +76,17 @@ export default function MenuPage() {
       } else if (itemAny.sizes && itemAny.sizes.length > 0) {
         finalPrice = itemAny.sizes[0].price;
       }
-
-      return {
-        ...item,
-        image: dynamicSrc, // تمرير المسار السليم للـ MenuList
-        imageUrl: dynamicSrc,
-        price: finalPrice
-      };
+return {
+  ...item,
+  image: dynamicSrc,
+  imageUrl: dynamicSrc,
+  price: finalPrice,
+  // ← أضف السطر ده
+  sizes: item.priceList?.map(p => ({
+    label: `Size ${p.size}`,
+    price: p.price
+  })) ?? []
+}
     });
   }, [products, localImages]);
 
@@ -95,19 +99,17 @@ export default function MenuPage() {
       item.description?.toLowerCase().includes(q)
     )
   }, [mappedProducts, searchQuery])
-
-  // ── Handlers ──
-  const handleAdd = (item: MenuItem) => {
-    if (item.sizes && item.sizes.length > 0) {
-      setModalItem(item)
-    } else {
-      addToCart(item)
-    }
+const handleAdd = (item: MenuItem) => {
+  if (item.sizes && item.sizes.length > 0) {
+    setModalItem(item)
+  } else {
+    addToCart(item)  // لو مفيش sizes → أضف للكارت مباشرة
   }
-
-  const handleSizeAdd = (item: MenuItem, size: MenuItemSize) => {
-    addToCart(item, size)
-  }
+}
+const handleSizeAdd = (item: MenuItem, size: MenuItemSize, extras: Extra[]) => {
+  console.log('handleSizeAdd called', { item, size, extras })
+  addToCart(item, size, extras)
+}
 
   return (
     <>

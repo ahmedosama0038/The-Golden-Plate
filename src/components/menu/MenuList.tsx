@@ -57,7 +57,7 @@ export default function MenuList({ items, onAdd }: Props) {
                 className="row-add-btn"
                 onClick={() => onAdd(item)}
               >
-                {item.sizes && item.sizes.length > 0 ? 'Select Size' : 'Add to Order'}
+               {item.sizes && item.sizes.length > 0 ? 'Select Size' : 'Add to Order'}
               </button>
             </div>
 
