@@ -891,3 +891,402 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     margin-bottom: 1rem;
     color: rgba(212, 175, 55, 0.3);
 }
+
+/* ── Dashboard V2 Stats Grid ── */
+.adm-stats-grid-v2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.adm-stat-card-v2 {
+    background: var(--adm-card);
+    border: 1px solid var(--adm-border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    transition: all var(--adm-tr);
+    position: relative;
+    overflow: hidden;
+}
+
+.adm-stat-card-v2::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--adm-gold), transparent);
+    opacity: 0;
+    transition: opacity var(--adm-tr);
+}
+
+.adm-stat-card-v2:hover {
+    border-color: var(--adm-gold);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.1);
+}
+
+.adm-stat-card-v2:hover::before {
+    opacity: 1;
+}
+
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: var(--adm-gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--adm-gold);
+}
+
+.stat-card-body {
+    flex: 1;
+}
+
+.stat-value-v2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--adm-text);
+    margin-bottom: 0.3rem;
+}
+
+.stat-label-v2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--adm-muted);
+    margin-bottom: 0.6rem;
+}
+
+.stat-change-v2 {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+}
+
+.stat-change-v2.up {
+    color: var(--adm-green);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.stat-change-v2.down {
+    color: var(--adm-red);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Chart Section ── */
+.adm-chart-section {
+    background: var(--adm-card);
+    border: 1px solid var(--adm-border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header-row h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--adm-text);
+}
+
+.chart-dropdown-wrap {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.adm-chart-select {
+    background: var(--adm-bg);
+    border: 1px solid var(--adm-border);
+    border-radius: 8px;
+    color: var(--adm-text);
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color var(--adm-tr);
+    font-family: inherit;
+}
+
+.adm-chart-select:hover,
+.adm-chart-select:focus {
+    border-color: var(--adm-gold);
+    outline: none;
+}
+
+.adm-bar-chart-container {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 280px;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.bars-wrapper {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    width: 100%;
+    height: 100%;
+    gap: 1.2rem;
+}
+
+.bar-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    position: relative;
+}
+
+.bar-tooltip {
+    position: absolute;
+    bottom: 100%;
+    background: var(--adm-gold);
+    color: #000;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-bottom: 0.6rem;
+    opacity: 0;
+    transition: opacity var(--adm-tr);
+}
+
+.bar-column:hover .bar-tooltip {
+    opacity: 1;
+}
+
+.bar-actual-fill {
+    width: 100%;
+    background: linear-gradient(180deg, var(--adm-gold), rgba(212, 175, 55, 0.6));
+    border-radius: 8px 8px 0 0;
+    transition: all var(--adm-tr);
+    position: relative;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+}
+
+.bar-column:hover .bar-actual-fill {
+    filter: brightness(1.1);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.25);
+}
+
+.bar-day-label {
+    margin-top: 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--adm-muted);
+    text-align: center;
+}
+
+/* ── Dashboard Section V2 ── */
+.adm-dashboard-section-v2 {
+    background: var(--adm-card);
+    border: 1px solid var(--adm-border);
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--adm-border);
+}
+
+.section-header-row h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--adm-text);
+}
+
+.view-all-link {
+    color: var(--adm-gold);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all var(--adm-tr);
+}
+
+.view-all-link:hover {
+    color: #e5c158;
+    gap: 0.3rem;
+}
+
+/* ── Table V2 ── */
+.adm-table-wrap-v2 {
+    overflow-x: auto;
+}
+
+.adm-table-v2 {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.adm-table-v2 thead {
+    background: var(--adm-bg);
+}
+
+.adm-table-v2 th {
+    text-align: left;
+    padding: 1rem 1.2rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--adm-muted);
+    border-bottom: 1px solid var(--adm-border);
+}
+
+.adm-table-v2 td {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--adm-text);
+}
+
+.adm-table-row-v2 {
+    transition: background var(--adm-tr);
+}
+
+.adm-table-row-v2:hover {
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.adm-table-row-v2:hover td {
+    border-bottom-color: var(--adm-border);
+}
+
+.order-id-cell {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--adm-gold);
+    font-size: 0.95rem;
+}
+
+.customer-cell,
+.items-cell,
+.total-cell {
+    color: var(--adm-text);
+    font-size: 0.9rem;
+}
+
+.items-cell {
+    color: var(--adm-muted);
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.total-cell {
+    font-weight: 600;
+    color: var(--adm-gold);
+}
+
+.adm-status-v2 {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+    transition: all var(--adm-tr);
+}
+
+.adm-status-v2.completed {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--adm-green);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.adm-status-v2.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--adm-yellow);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.adm-status-v2.cancelled {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--adm-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ── Content Padding ── */
+.adm-content-padding {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+    .adm-stats-grid-v2 {
+        grid-template-columns: 1fr;
+    }
+
+    .adm-bar-chart-container,
+    .bars-wrapper {
+        height: 220px;
+    }
+
+    .chart-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .chart-dropdown-wrap {
+        width: 100%;
+    }
+
+    .adm-chart-select {
+        width: 100%;
+    }
+
+    .section-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .adm-table-v2 {
+        font-size: 0.8rem;
+    }
+
+    .adm-table-v2 th,
+    .adm-table-v2 td {
+        padding: 0.8rem 0.6rem;
+    }
+}

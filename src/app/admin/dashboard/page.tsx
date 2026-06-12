@@ -1,96 +1,124 @@
-
-// ============================================================
-//  admin/dashboard/page.tsx — الداشبورد الرئيسي
-//  Server Component
-// ============================================================
+'use client'
 
 import TopBar from '@/components/admin/TopBar'
-import { menuItems, defaultReviews } from '@/data/restaurant'
 
-// بيانات وهمية للـ UI — هتيجي من الـ API لاحقاً
-const MOCK_ORDERS = [
-  { id: '#1042', customer: 'James M.',  items: 'Wagyu + Scallops', total: '$113', status: 'confirmed',  time: '8 min ago'  },
-  { id: '#1041', customer: 'Sophia L.', items: 'Sea Bass + Wine',   total: '$70',  status: 'preparing', time: '15 min ago' },
-  { id: '#1040', customer: 'Yuki N.',   items: 'Truffle Arancini',  total: '$18',  status: 'ready',     time: '22 min ago' },
-  { id: '#1039', customer: 'Marcus T.', items: 'Chocolate Sphere',  total: '$19',  status: 'delivered', time: '1 hr ago'   },
+// داتا الإحصائيات مطابقة تماماً للصورة المرجعية
+const STATS = [
+  { label: 'Total Revenue', value: '$12,450', change: '+12.5% vs last week', icon: 'fa-solid fa-dollar-sign', trend: 'up' },
+  { label: 'Total Orders', value: '348', change: '+8.2% vs last week', icon: 'fa-solid fa-cart-shopping', trend: 'up' },
+  { label: 'Dishes Served', value: '1,240', change: '+5.4% vs last week', icon: 'fa-solid fa-utensils', trend: 'up' },
+  { label: 'Customer Rating', value: '4.9', change: '-0.1% vs last week', icon: 'fa-solid fa-star', trend: 'down' },
 ]
 
-// badge color حسب الـ status
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending:   'yellow',
-    confirmed: 'blue',
-    preparing: 'yellow',
-    ready:     'green',
-    delivered: 'gold',
-    cancelled: 'red',
-  }
-  return <span className={`adm-badge ${map[status] ?? 'gold'}`}>{status}</span>
-}
+// داتا المبيعات الأسبوعية لرسم الشارت بالـ CSS الفخم
+const WEEKLY_SALES = [
+  { day: 'Mon', amount: '$4,500', height: '45%' },
+  { day: 'Tue', amount: '$7,000', height: '70%' },
+  { day: 'Wed', amount: '$5,500', height: '55%' },
+  { day: 'Thu', amount: '$9,000', height: '90%' },
+  { day: 'Fri', amount: '$8,500', height: '85%' },
+  { day: 'Sat', amount: '$10,000', height: '100%' },
+  { day: 'Sun', amount: '$6,000', height: '60%' },
+]
+
+// داتا الطلبات الأخيرة مطابقة للصورة بالظبط
+const RECENT_ORDERS = [
+  { id: '#ORD-4121', customer: 'Alice Smith', items: 'Wagyu Burger, Fries', total: '$42.00', status: 'Completed' },
+  { id: '#ORD-4122', customer: 'Robert Fox', items: 'Truffle Risotto', total: '$28.00', status: 'Pending' },
+  { id: '#ORD-4123', customer: 'Sarah Lee', items: 'Salmon, Red Wine', total: '$65.50', status: 'Completed' },
+  { id: '#ORD-4124', customer: 'John Doe', items: 'Velvet Tart', total: '$14.00', status: 'Cancelled' },
+  { id: '#ORD-4125', customer: 'Emily White', items: 'Lobster Thermidor', total: '$112.00', status: 'Pending' },
+]
 
 export default function DashboardPage() {
-  const pendingReviews = defaultReviews.filter((r) => r.status === 'pending').length
-
-  const STATS = [
-    { label: 'Total Orders Today', value: '24',              icon: 'fa-solid fa-bag-shopping',  color: '#3b82f6' },
-    { label: 'Revenue Today',      value: '$1,840',          icon: 'fa-solid fa-dollar-sign',   color: '#22c55e' },
-    { label: 'Reservations',       value: '8',               icon: 'fa-solid fa-calendar-days', color: '#D4AF37' },
-    { label: 'Pending Reviews',    value: String(pendingReviews), icon: 'fa-solid fa-star',     color: '#f59e0b' },
-    { label: 'Menu Items',         value: String(menuItems.length), icon: 'fa-solid fa-utensils', color: '#a855f7' },
-  ]
-
   return (
     <>
-      <TopBar title="Dashboard" />
+      <TopBar title="Dashboard Overview" subtitle="Saturday, June 13, 2026" />
+      
       <div className="adm-content">
 
-        {/* Stats */}
-        <div className="adm-stats">
-          {STATS.map(({ label, value, icon, color }) => (
-            <div key={label} className="adm-stat-card">
-              <div className="adm-stat-icon" style={{ background: `${color}18`, color }}>
-                <i className={icon} />
+        {/* 📊 1. Grid الكاردات الإحصائية العلوية */}
+        <div className="adm-stats-grid-v2">
+          {STATS.map((stat, idx) => (
+            <div key={idx} className="adm-stat-card-v2">
+              <div className="stat-card-header">
+                <div className="stat-icon-box">
+                  <i className={stat.icon} />
+                </div>
               </div>
-              <div>
-                <div className="adm-stat-val">{value}</div>
-                <div className="adm-stat-lbl">{label}</div>
+              <div className="stat-card-body">
+                <p className="stat-value-v2">{stat.value}</p>
+                <h3 className="stat-label-v2">{stat.label}</h3>
+                <span className={`stat-change-v2 ${stat.trend}`}>
+                  <i className={`fa-solid ${stat.trend === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`} />
+                  {stat.change}
+                </span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Recent Orders */}
-        <div className="adm-table-wrap">
-          <div className="adm-table-header">
-            <div className="adm-table-title">Recent Orders</div>
-            <a href="/admin/orders" className="adm-btn ghost" style={{ fontSize: '0.75rem' }}>
-              View All <i className="fa-solid fa-arrow-right" />
-            </a>
+        {/* 📈 2. شارت المبيعات الأسبوعية الفخم المصمم بالـ CSS */}
+        <div className="adm-chart-section">
+          <div className="chart-header-row">
+            <h2>Weekly Sales Overview</h2>
+            <div className="chart-dropdown-wrap">
+              <select className="adm-chart-select">
+                <option>This Week</option>
+                <option>Last Week</option>
+                <option>This Month</option>
+              </select>
+            </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_ORDERS.map((order) => (
-                <tr key={order.id}>
-                  <td style={{ color: 'var(--adm-gold)', fontWeight: 600 }}>{order.id}</td>
-                  <td>{order.customer}</td>
-                  <td style={{ color: 'var(--adm-muted)' }}>{order.items}</td>
-                  <td style={{ fontWeight: 600 }}>{order.total}</td>
-                  <td><StatusBadge status={order.status} /></td>
-                  <td style={{ color: 'var(--adm-muted)' }}>{order.time}</td>
-                </tr>
+          
+          <div className="adm-bar-chart-container">
+            <div className="bars-wrapper">
+              {WEEKLY_SALES.map((sale, idx) => (
+                <div key={idx} className="bar-column">
+                  <div className="bar-tooltip">{sale.amount}</div>
+                  <div className="bar-actual-fill" style={{ height: sale.height }}></div>
+                  <span className="bar-day-label">{sale.day}</span>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+        </div>
+
+        {/* 📑 3. جدول الطلبات الأخيرة الرايق */}
+        <div className="adm-dashboard-section-v2">
+          <div className="section-header-row">
+            <h2>Recent Orders</h2>
+            <a href="/admin/orders" className="view-all-link">View All</a>
+          </div>
+
+          <div className="adm-table-wrap-v2">
+            <table className="adm-table-v2">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RECENT_ORDERS.map((order, idx) => (
+                  <tr key={idx} className="adm-table-row-v2">
+                    <td className="order-id-cell">{order.id}</td>
+                    <td className="customer-cell">{order.customer}</td>
+                    <td className="items-cell">{order.items}</td>
+                    <td className="total-cell">{order.total}</td>
+                    <td>
+                      <span className={`adm-status-v2 ${order.status.toLowerCase()}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
