@@ -1,15 +1,15 @@
-
 'use client'
 
-import { useState }    from 'react'
-import { useRouter }   from 'next/navigation'
-import { useForm }     from 'react-hook-form'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, LoginData } from '@/lib/schemas'
 
 export default function AdminLoginPage() {
-  const router   = useRouter()
-  const [error,  setError]   = useState('')
+  const router = useRouter()
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -22,10 +22,7 @@ export default function AdminLoginPage() {
   const onSubmit = async (data: LoginData) => {
     setError('')
     try {
-      // مؤقتاً: mock login حتى علياء تخلص الـ API
-      // هنبدله بـ authApi.login لاحقاً
       if (data.username === 'admin' && data.password === 'admin123') {
-        // نحفظ token مؤقت في cookie
         document.cookie = 'token=mock-token-123; path=/; max-age=86400'
         router.push('/admin/dashboard')
       } else {
@@ -37,35 +34,50 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="adm-login-wrap" style={{ marginLeft: 0 }}>
-      <div className="adm-login-card">
+    <div className="adm-login-wrap">
+      <div className="adm-login-bg"></div>
+      <div className="adm-login-overlay"></div>
 
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.5rem', fontWeight: 700, color: 'var(--adm-gold)', marginBottom: '0.3rem' }}>
-            The Golden Plate
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted)', letterSpacing: '2px', textTransform: 'uppercase' }}>
-            Admin Panel
-          </div>
+      <div className="adm-login-card animate-up">
+        <div className="login-header">
+          <i className="fa-solid fa-utensils"></i>
+          <h1>The Golden Plate</h1>
+          <p>Admin Portal Access</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-
-          <div className="adm-form-group">
-            <label>Username</label>
-            <input {...register('username')} placeholder="admin" />
+        <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+          
+          <div className="input-group">
+            <input 
+              {...register('username')} 
+              placeholder=" " 
+              id="username"
+              required
+            />
+            <label htmlFor="username">Username</label>
             {errors.username && (
-              <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>
+              <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
                 {errors.username.message}
               </span>
             )}
           </div>
 
-          <div className="adm-form-group">
-            <label>Password</label>
-            <input {...register('password')} type="password" placeholder="••••••••" />
+          <div className="input-group">
+            <input 
+              {...register('password')} 
+              type={showPassword ? 'text' : 'password'} 
+              placeholder=" " 
+              id="password"
+              required
+            />
+            <label htmlFor="password">Password</label>
+            <i 
+              className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} toggle-password`}
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ cursor: 'pointer' }}
+            ></i>
             {errors.password && (
-              <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>
+              <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
                 {errors.password.message}
               </span>
             )}
@@ -77,25 +89,31 @@ export default function AdminLoginPage() {
             </div>
           )}
 
+          <div className="form-options">
+            <label className="checkbox-container">
+              <input type="checkbox" defaultChecked />
+              <span className="checkmark"></span>
+              Remember me
+            </label>
+            <a href="#" className="forgot-pass">Forgot Password?</a>
+          </div>
+
           <button
             type="submit"
-            className="adm-btn primary"
+            className="btn-login"
             disabled={isSubmitting}
-            style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}
           >
-            {isSubmitting
-              ? <><i className="fa-solid fa-spinner fa-spin" /> Signing in...</>
-              : <><i className="fa-solid fa-right-to-bracket" /> Sign In</>
-            }
+            {isSubmitting ? (
+              <><i className="fa-solid fa-spinner fa-spin" /> Signing in...</>
+            ) : (
+              <><span className="btn-text">Sign In to Dashboard</span> <i className="fa-solid fa-arrow-right"></i></>
+            )}
           </button>
-
         </form>
 
-        {/* hint مؤقت */}
-        <p style={{ textAlign: 'center', marginTop: '1rem', color: 'var(--adm-muted)', fontSize: '0.72rem' }}>
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted, #888)', fontSize: '0.75rem' }}>
           Temp: admin / admin123
         </p>
-
       </div>
     </div>
   )

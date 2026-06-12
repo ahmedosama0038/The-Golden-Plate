@@ -5,13 +5,15 @@
 // ============================================================
 
 interface Props {
-  title: string
+  title: string,
+  subtitle?: string,
 }
 
-export default function TopBar({ title }: Props) {
+export default function TopBar({ title, subtitle }: Props) {
   return (
     <div className="adm-topbar">
       <h1 className="adm-topbar-title">{title}</h1>
+      {subtitle && <p className="adm-topbar-subtitle">{subtitle}</p>}
       <div className="adm-topbar-right">
         {/* Avatar */}
         <div className="adm-avatar">A</div>
