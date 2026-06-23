@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/menu',    label: 'Menu'      },
   { href: '/about',   label: 'Our Story' },
   { href: '/contact', label: 'Contact'   },
+   { href: '/admin',   label: 'Login'     },  // ← أضف السطر ده
 ]
 
 const SOCIALS = [
