@@ -6,12 +6,10 @@ import { reservationApi } from '@/lib/api'
 import TopBar from '@/components/admin/TopBar'
 import { toast } from '@/lib/toast'
 
-// 🎯 خريطة تحويل الأرقام (Enums) أو النصوص لحالات وألوان واضحة لمنع الـ Crash
 const STATUS_MAP: Record<string | number, { label: string; color: string }> = {
   0: { label: 'pending',   color: 'yellow' },
   1: { label: 'confirmed', color: 'green'  },
   2: { label: 'cancelled', color: 'red'    },
-  // تأمين إضافي لو السيرفر بعتها نصوص جاهزة في أي وقت
   'pending':   { label: 'pending',   color: 'yellow' },
   'confirmed': { label: 'confirmed', color: 'green'  },
   'cancelled': { label: 'cancelled', color: 'red'    },
@@ -21,15 +19,15 @@ export default function ReservationsPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState('all')
 
-  // ── 1️⃣ جلب الحجوزات الحقيقية مع إلغاء الكاش لضمان التحديث الفوري ──
+  // ── جلب الحجوزات ──
   const { data: reservations = [], isLoading } = useQuery<any[]>({
     queryKey: ['admin-reservations'],
     queryFn: reservationApi.getAll,
-    staleTime: 0, // اعتبر الداتا قديمة فوراً واطلب جديد
-    refetchOnWindowFocus: true, // أول ما تضغط على شاشة الأدمن يلف يجيب أحدث حجز علطول
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   })
 
-  // ── 2️⃣ ميوتايشن تحديث الحالة (مؤمنة بالأرقام للـ Enum الباكيند) ──
+  // ── Mutation تحديث الحالة ──
   const statusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string | number; status: number }) => {
       return reservationApi.updateStatus(id, status)
@@ -44,11 +42,10 @@ export default function ReservationsPage() {
     }
   })
 
-  // ── 3️⃣ الفلترة السليمة والآمنة من الـ Runtime Crash ──
+  // ── الفلترة ──
   const filtered = reservations.filter((r) => {
     const statusKey = r.status !== undefined && r.status !== null ? String(r.status).toLowerCase() : '0'
     const mapped = STATUS_MAP[statusKey] || { label: 'pending', color: 'yellow' }
-    
     return filter === 'all' || mapped.label === filter
   })
 
@@ -57,7 +54,6 @@ export default function ReservationsPage() {
       <TopBar title="Reservations" />
       <div className="adm-content">
 
-        {/* Filter Toolbar */}
         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem' }}>
           {['all', 'pending', 'confirmed', 'cancelled'].map((s) => (
             <button
@@ -76,14 +72,12 @@ export default function ReservationsPage() {
           ))}
         </div>
 
-        {/* Loading Spinner */}
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--adm-muted)' }}>
             <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem' }} />
           </div>
         )}
 
-        {/* Table View */}
         {!isLoading && (
           <div className="adm-table-wrap">
             <div className="adm-table-header">
@@ -104,21 +98,19 @@ export default function ReservationsPage() {
               </thead>
               <tbody>
                 {filtered.map((r) => {
-                  // تأمين الـ Status م الرقم أو النص
                   const statusValue = r.status !== undefined && r.status !== null ? String(r.status).toLowerCase() : '0'
                   const currentStatus = STATUS_MAP[statusValue] || { label: 'pending', color: 'yellow' }
-                  
-                  // استخراج الحقول الحقيقية اللي كشفتها لقطة الشاشة
-                  const id = r.id || r.Id
-                  const notes = r.notes || '—'
-                  const date = r.dateOnly || r.date
-                  const time = r.timeOnly || r.time
-                  const guests = r.numberOfGuests || r.guests || 0
+
+                  const id         = r.id || r.Id
+                  const notes      = r.notes || '—'
+                  const date       = r.dateOnly || r.date
+                  const time       = r.timeOnly || r.time
+                  const guests     = r.numberOfGuests || r.guests || 0
                   const customerId = r.customerId || 0
 
-                  // حل ذكي ومؤقت لعرض الاسم والتليفون بناءً على الـ customerId الواصل م الباكيند
-                  const name = customerId ? `Client #00${customerId}` : 'Walk-in Guest'
-                  const phone = customerId ? `01151343${customerId}2` : '—'
+                  // ← دلوقتي البيانات جاية مباشرة من الـ Reservation نفسها
+                  const name  = r.customerName  || `Client #${customerId}`
+                  const phone = r.customerPhone || '—'
 
                   return (
                     <tr key={id}>
@@ -140,19 +132,17 @@ export default function ReservationsPage() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
-                          {/* زر القبول (PATCH) -> status: 1 */}
-                          <button 
-                            className="adm-btn ghost" 
+                          <button
+                            className="adm-btn ghost"
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.72rem', color: '#22c55e', borderColor: '#22c55e' }}
                             disabled={statusMutation.isPending}
                             onClick={() => statusMutation.mutate({ id: id, status: 1 })}
                           >
                             {statusMutation.isPending ? '...' : <i className="fa-solid fa-check" />}
                           </button>
-                          
-                          {/* زر الإلغاء (PATCH) -> status: 2 */}
-                          <button 
-                            className="adm-btn danger" 
+
+                          <button
+                            className="adm-btn danger"
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.72rem' }}
                             disabled={statusMutation.isPending}
                             onClick={() => {

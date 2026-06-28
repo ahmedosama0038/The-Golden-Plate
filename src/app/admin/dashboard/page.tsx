@@ -1,16 +1,10 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import TopBar from '@/components/admin/TopBar'
+import { reviewApi } from '@/lib/api'
 
-// داتا الإحصائيات مطابقة تماماً للصورة المرجعية
-const STATS = [
-  { label: 'Total Revenue', value: '$12,450', change: '+12.5% vs last week', icon: 'fa-solid fa-dollar-sign', trend: 'up' },
-  { label: 'Total Orders', value: '348', change: '+8.2% vs last week', icon: 'fa-solid fa-cart-shopping', trend: 'up' },
-  { label: 'Dishes Served', value: '1,240', change: '+5.4% vs last week', icon: 'fa-solid fa-utensils', trend: 'up' },
-  { label: 'Customer Rating', value: '4.9', change: '-0.1% vs last week', icon: 'fa-solid fa-star', trend: 'down' },
-]
-
-// داتا المبيعات الأسبوعية لرسم الشارت بالـ CSS الفخم
+// داتا الـ Orders والمبيعات لسه ثابتة — معلقة على سيف يعمل Order endpoints
 const WEEKLY_SALES = [
   { day: 'Mon', amount: '$4,500', height: '45%' },
   { day: 'Tue', amount: '$7,000', height: '70%' },
@@ -21,7 +15,6 @@ const WEEKLY_SALES = [
   { day: 'Sun', amount: '$6,000', height: '60%' },
 ]
 
-// داتا الطلبات الأخيرة مطابقة للصورة بالظبط
 const RECENT_ORDERS = [
   { id: '#ORD-4121', customer: 'Alice Smith', items: 'Wagyu Burger, Fries', total: '$42.00', status: 'Completed' },
   { id: '#ORD-4122', customer: 'Robert Fox', items: 'Truffle Risotto', total: '$28.00', status: 'Pending' },
@@ -31,6 +24,26 @@ const RECENT_ORDERS = [
 ]
 
 export default function DashboardPage() {
+
+  // ── جلب الـ Reviews الحقيقية عشان نحسب الـ Rating ──
+  const { data: reviews = [] } = useQuery<any[]>({
+    queryKey: ['dashboard-reviews'],
+    queryFn: reviewApi.getAll,
+  })
+
+  // ── حساب متوسط الـ Rating الحقيقي ──
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : '0.0'
+
+  // ── الإحصائيات: Rating دلوقتي حقيقي، الباقي لسه ثابت لحد ما سيف يخلص Orders ──
+  const STATS = [
+    { label: 'Total Revenue', value: '$12,450', change: '+12.5% vs last week', icon: 'fa-solid fa-dollar-sign', trend: 'up' },
+    { label: 'Total Orders', value: '348', change: '+8.2% vs last week', icon: 'fa-solid fa-cart-shopping', trend: 'up' },
+    { label: 'Dishes Served', value: '1,240', change: '+5.4% vs last week', icon: 'fa-solid fa-utensils', trend: 'up' },
+    { label: 'Customer Rating', value: avgRating, change: `${reviews.length} reviews`, icon: 'fa-solid fa-star', trend: 'up' },
+  ]
+
   return (
     <>
       <TopBar title="Dashboard Overview" subtitle="Saturday, June 13, 2026" />
@@ -58,7 +71,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* 📈 2. شارت المبيعات الأسبوعية الفخم المصمم بالـ CSS */}
+        {/* 📈 2. شارت المبيعات الأسبوعية — لسه Static لحد ما يكون فيه Orders */}
         <div className="adm-chart-section">
           <div className="chart-header-row">
             <h2>Weekly Sales Overview</h2>
@@ -84,7 +97,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 📑 3. جدول الطلبات الأخيرة الرايق */}
+        {/* 📑 3. جدول الطلبات الأخيرة — لسه Static لحد ما يكون فيه Order endpoint */}
         <div className="adm-dashboard-section-v2">
           <div className="section-header-row">
             <h2>Recent Orders</h2>

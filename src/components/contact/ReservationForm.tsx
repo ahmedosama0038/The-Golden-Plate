@@ -7,18 +7,6 @@ import { useState }    from 'react'
 import { reservationApi } from '@/lib/api'
 import { ReservationData, reservationSchema } from '@/lib/schemas'
 
-// ── Schema جديد يطابق الـ API بالظبط ──
-// const reservationSchema = z.object({
-//   customerName:   z.string().min(2,  'Name is required'),
-//   customerPhone:  z.string().min(10, 'Phone is required'),
-//   address:        z.string().min(2,  'Address is required'),  // ← address مش customerCity
-//   numberOfGuests: z.number().min(1,  'Guests required'),
-//   dateOnly:       z.string().min(1,  'Date is required'),
-//   timeOnly:       z.string().min(1,  'Time is required'),
-//   notes:          z.string().optional(),
-// })
-
-// type ReservationData = z.infer<typeof reservationSchema>
 
 const TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00',
