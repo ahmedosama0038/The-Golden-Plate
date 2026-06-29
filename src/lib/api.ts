@@ -8,9 +8,9 @@ const isServer = typeof window === "undefined";
 
 export const api = axios.create({
   baseURL: isServer
-    ? "https://myrestaurant.runasp.net/api"
+    ? "https://goldenapi.site.je/api"   // 🆕 الدومين الجديد بتاع سيف
     : "/api/remote",
-});
+})
 
 // Interceptor — بيضيف الـ token تلقائي في كل request (شغال زي ما هو ومفيهوش أي مشكلة)
 api.interceptors.request.use((config) => {

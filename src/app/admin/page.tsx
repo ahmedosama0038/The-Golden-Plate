@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, LoginData } from '@/lib/schemas'
+import { login } from '@/lib/auth'
+
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -19,19 +21,23 @@ export default function AdminLoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = async (data: LoginData) => {
-    setError('')
-    try {
-      if (data.username === 'admin' && data.password === 'admin123') {
-        document.cookie = 'token=mock-token-123; path=/; max-age=86400'
-        router.push('/admin/dashboard')
-      } else {
-        setError('Invalid credentials')
-      }
-    } catch {
-      setError('Something went wrong. Please try again.')
+
+// ...
+
+const onSubmit = async (data: LoginData) => {
+  setError('')
+  try {
+    const result = await login(data.username, data.password)
+
+    if (result.success) {
+      router.push('/admin/dashboard')
+    } else {
+      setError('Invalid credentials')
     }
+  } catch (err) {
+    setError('Invalid credentials')
   }
+}
 
   return (
     <div className="adm-login-wrap">
@@ -46,14 +52,9 @@ export default function AdminLoginPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="login-form">
-          
+
           <div className="input-group">
-            <input 
-              {...register('username')} 
-              placeholder=" " 
-              id="username"
-              required
-            />
+            <input {...register('username')} placeholder=" " id="username" />
             <label htmlFor="username">Username</label>
             {errors.username && (
               <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
@@ -63,15 +64,14 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="input-group">
-            <input 
-              {...register('password')} 
-              type={showPassword ? 'text' : 'password'} 
-              placeholder=" " 
+            <input
+              {...register('password')}
+              type={showPassword ? 'text' : 'password'}
+              placeholder=" "
               id="password"
-              required
             />
             <label htmlFor="password">Password</label>
-            <i 
+            <i
               className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} toggle-password`}
               onClick={() => setShowPassword(!showPassword)}
               style={{ cursor: 'pointer' }}
@@ -98,11 +98,7 @@ export default function AdminLoginPage() {
             <a href="#" className="forgot-pass">Forgot Password?</a>
           </div>
 
-          <button
-            type="submit"
-            className="btn-login"
-            disabled={isSubmitting}
-          >
+          <button type="submit" className="btn-login" disabled={isSubmitting}>
             {isSubmitting ? (
               <><i className="fa-solid fa-spinner fa-spin" /> Signing in...</>
             ) : (
@@ -110,10 +106,6 @@ export default function AdminLoginPage() {
             )}
           </button>
         </form>
-
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted, #888)', fontSize: '0.75rem' }}>
-          Temp: admin / admin123
-        </p>
       </div>
     </div>
   )

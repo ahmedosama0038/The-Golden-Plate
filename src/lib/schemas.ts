@@ -29,3 +29,12 @@ export const reviewSchema = z.object({
 })
 
 export type ReviewData = z.infer<typeof reviewSchema>
+
+
+// 1️⃣ الـ Schema بتاع الفورم
+  export const checkoutSchema = z.object({
+  customerName: z.string().min(3, 'الاسم لازم يكون 3 حروف على الأقل'),
+  customerPhone: z.string().regex(/^01[0125][0-9]{8}$/, 'رقم تليفون مصري غير صحيح'),
+})
+
+export type CheckoutFormData = z.infer<typeof checkoutSchema>

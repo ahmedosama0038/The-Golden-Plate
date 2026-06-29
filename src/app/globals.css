@@ -756,4 +756,53 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
   .menu-card:hover, .menu-row:hover, .feature-card:hover { transform: none; }
   .btn-primary:hover, .btn-outline:hover { transform: none; }
   .checkout-btn:hover, .icon-btn:hover, .socials a:hover { transform: none; }
+}/* ===== CHECKOUT MODAL ===== */
+.checkout-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  z-index: 2100; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
 }
+.checkout-modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; width: 420px; max-width: 92vw;
+  padding: 2rem 2rem 1.6rem;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+.checkout-header { text-align: center; margin-bottom: 1.8rem; }
+.checkout-header i { color: var(--gold); font-size: 1.6rem; margin-bottom: 0.6rem; display: block; }
+.checkout-header h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--text); margin-bottom: 0.3rem; }
+.checkout-header p { color: var(--text-muted); font-size: 0.82rem; }
+
+/* Floating label inputs */
+.co-input-group { position: relative; margin-bottom: 1.4rem; }
+.co-input-group input {
+  width: 100%; background: var(--bg-dark); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.1rem 0.9rem 0.5rem; color: var(--text);
+  font-family: inherit; font-size: 0.92rem; outline: none;
+  transition: border-color var(--tr);
+}
+.co-input-group input:focus { border-color: var(--gold-dark); }
+.co-input-group label {
+  position: absolute; right: 0.9rem; top: 0.85rem;
+  color: var(--text-muted); font-size: 0.85rem;
+  pointer-events: none; transition: all 0.2s ease;
+}
+.co-input-group input:focus + label,
+.co-input-group input:not(:placeholder-shown) + label {
+  top: 0.3rem; font-size: 0.65rem; color: var(--gold);
+}
+.co-error-text { color: #ef4444; font-size: 0.72rem; margin-top: 0.3rem; display: block; }
+
+.checkout-actions { display: flex; gap: 0.8rem; margin-top: 0.5rem; }
+.checkout-actions button {
+  flex: 1; padding: 0.85rem; border-radius: 10px;
+  font-weight: 600; font-size: 0.88rem; transition: all var(--tr);
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.btn-confirm-order { background: var(--gold); color: var(--btn-text); }
+.btn-confirm-order:hover { background: var(--gold-dark); }
+.btn-confirm-order:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-secondary:hover { border-color: rgba(255,255,255,0.25); }
+
+.animate-up { animation: fadeUp 0.3s ease; }
