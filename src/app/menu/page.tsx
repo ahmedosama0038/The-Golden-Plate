@@ -83,7 +83,7 @@ return {
   price: finalPrice,
   // ← أضف السطر ده
   sizes: item.priceList?.map(p => ({
-    label: `Size ${p.size}`,
+   label: p.size === 1 ? 'Small' : p.size === 2 ? 'Medium' : p.size === 3 ? 'Large' : `Size ${p.size}`,
     price: p.price
   })) ?? []
 }

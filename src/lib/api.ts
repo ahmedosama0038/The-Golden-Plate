@@ -185,3 +185,23 @@ export const extraApi = {
     return api.delete(`/Extra/${id}`)
   }
 }
+
+// ── 7️⃣ خدمات الأوردر (Order) ──
+export const orderApi = {
+  // إنشاء عميل جديد أو البحث عنه
+  createCustomer: async (name: string, phone: string) => {
+    const response = await api.post('/Customer', { name, phone })
+    return response.data
+    // بيرجع: { id: 1, name: "Ahmed", phone: "01021245010" }
+  },
+
+  // إنشاء أوردر جديد
+  createOrder: async (customerId: number, items: { product_id: number, quantity: number }[]) => {
+    const response = await api.post('/Order', {
+      customer_id: customerId,
+      items
+    })
+    return response.data
+    // بيرجع: { id: 1, status: "pending", ... }
+  }
+}
