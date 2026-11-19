@@ -68,20 +68,21 @@ export default function MenuPage() {
             ? backendSrc
             : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop')
 
-        // 2️⃣ الأحجام: الشكل الجديد (sizes) أو القديم (priceList)
-        const sizes = itemAny.sizes?.length
-          ? itemAny.sizes.map((s: any) => ({
-              label: s.size_name.charAt(0).toUpperCase() + s.size_name.slice(1),
-              price: Number(s.price),
-            }))
-          : (itemAny.priceList?.map((p: any) => ({
-              label:
-                p.size === 1 ? 'Small'
-                : p.size === 2 ? 'Medium'
-                : p.size === 3 ? 'Large'
-                : `Size ${p.size}`,
-              price: p.price,
-            })) ?? [])
+        /// 2️⃣ الأحجام: الشكل الجديد (sizes) أو القديم (priceList)
+const sizes = itemAny.sizes?.length
+  ? itemAny.sizes.map((s: any) => ({
+      id: s.id,   // 🆕 رقم الحجم اللي الباك محتاجه في الطلب
+      label: s.size_name.charAt(0).toUpperCase() + s.size_name.slice(1),
+      price: Number(s.price),
+    }))
+  : (itemAny.priceList?.map((p: any) => ({
+      label:
+        p.size === 1 ? 'Small'
+        : p.size === 2 ? 'Medium'
+        : p.size === 3 ? 'Large'
+        : `Size ${p.size}`,
+      price: p.price,
+    })) ?? [])
 
         // 3️⃣ السعر: أول حجم، أو base_price لو مفيش أحجام
         const finalPrice = sizes.length > 0

@@ -32,15 +32,16 @@ export function useCart() {
     const cartItemId = extrasKey ? `${baseId}_${extrasKey}` : baseId
 
     const cartItem: CartItem = {
-      id:          String(cartItemId),
-      menuItemId:  String(item.id),
-      name:        item.name,
-      price,
-      image:       item.image,
-      quantity:    1,
-      size:        selectedSize?.label,
-      selectedExtras: selectedExtras ?? [],
-    }
+  id:          String(cartItemId),
+  menuItemId:  String(item.id),
+  name:        item.name,
+  price,
+  image:       item.image,
+  quantity:    1,
+  size:        selectedSize?.label,
+  sizeId:      selectedSize?.id != null ? Number(selectedSize.id) : null, // 🆕
+  selectedExtras: selectedExtras ?? [],
+}
     dispatch(addItem(cartItem))
   }
 
@@ -50,37 +51,59 @@ export function useCart() {
   const toggle          = () => dispatch(toggleCart())
   const open            = () => dispatch(openCart())
   const close           = () => dispatch(closeCart())
+const buildWhatsAppMessage = (
+  waNumber: string,
+  currency: string,
+  customer: CheckoutFormData
+) => {
+  const lines = items.map((i) => {
+    const extras = i.selectedExtras?.length
+      ? ` + ${i.selectedExtras.map((e) => e.name).join(', ')}`
+      : ''
+    return `- ${i.name}${i.size ? ` (${i.size})` : ''}${extras} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} ${currency}`
+  })
 
-  const buildWhatsAppMessage = (
-    waNumber: string,
-    currency: string,
-    customer: CheckoutFormData
-  ) => {
-    // 🆕 بنكتب الإضافات في سطر كل منتج
-    const lines = items.map((i) => {
-      const extras = i.selectedExtras?.length
-        ? ` + ${i.selectedExtras.map((e) => e.name).join(', ')}`
-        : ''
-      return `• ${i.name}${i.size ? ` (${i.size})` : ''}${extras} x${i.quantity} = ${currency}${(i.price * i.quantity).toFixed(2)}`
-    })
+  const typeLines =
+    customer.order_type === 'delivery'
+      ? ['*Type:* Delivery', `*Address:* ${customer.address}`]
+      : [
+          '*Type:* Table Reservation',
+          `*Guests:* ${customer.numberOfGuests}`,
+          `*Date:* ${customer.dateOnly}`,
+          `*Time:* ${customer.timeOnly}`,
+        ]
 
-    const customerLines = [
-      `👤 *Name:* ${customer.customerName}`,
-      `📞 *Phone:* ${customer.customerPhone}`,
-    ]
+  const notesLine = customer.notes?.trim()
+    ? [`*Notes:* ${customer.notes.trim()}`]
+    : []
 
-    const msg = [
-      '🍽️ *New Order — The Golden Plate*',
-      '',
-      ...customerLines,
-      '',
-      ...lines,
-      '',
-      `*Total: ${currency}${total.toFixed(2)}*`,
-    ].join('\n')
+  const msg = [
+    '*New Order - The Golden Plate*',
+    '',
+    `*Name:* ${customer.customerName}`,
+    `*Phone:* ${customer.customerPhone}`,
+    ...typeLines,
+    ...notesLine,
+    '',
+    ...lines,
+    '',
+    `*Total: ${total.toFixed(2)} ${currency}*`,
+  ].join('\n')
 
-    return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`
-  }
+  return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`
+}
 
-  return { items, count, total, isOpen, addToCart, removeFromCart, changeQuantity, emptyCart, toggle, open, close, buildWhatsAppMessage }
+  // 🆕 الباك لسه مفيهوش إضافات، فبنكتبها في notes
+const buildExtrasNote = () =>
+  items
+    .filter((i) => i.selectedExtras && i.selectedExtras.length > 0)
+    .map(
+      (i) =>
+        `${i.name}${i.size ? ` (${i.size})` : ''}: ${i.selectedExtras!
+          .map((e) => e.name)
+          .join(', ')}`
+    )
+    .join(' | ')
+
+  return { items, count, total, isOpen, addToCart, removeFromCart, changeQuantity, emptyCart, toggle, open, close, buildWhatsAppMessage , buildExtrasNote }
 }

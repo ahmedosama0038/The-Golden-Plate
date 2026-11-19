@@ -1,60 +1,91 @@
 'use client'
 
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query' // 🆕 استورد useMutation
+import { useMutation } from '@tanstack/react-query'
 import { useCart } from '@/hooks/useCart'
 import CheckoutModal from './CheckoutModal'
 import { CheckoutFormData } from '@/lib/schemas'
-import { orderApi } from '@/lib/api' // 🆕 استورد orderApi
+import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { toast } from '@/lib/toast'
+
 const CURRENCY = 'ج.م'
 const WA_NUMBER = '201021245010'
 
 export default function CartSidebar() {
-  const { items, total, isOpen, close, removeFromCart, changeQuantity, buildWhatsAppMessage, emptyCart } = useCart()
+  const {
+    items, total, isOpen, close,
+    removeFromCart, changeQuantity,
+    buildWhatsAppMessage, buildExtrasNote, emptyCart,
+  } = useCart()
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
 
-  // 🆕 useMutation بدل async/await المباشر
-  const orderMutation = useMutation({
-    
-    // mutationFn: الدالة اللي بتتنفذ لما نناديها
-    // بتاخد customerData (الاسم والتليفون) من المودال
-    mutationFn: async (customerData: CheckoutFormData) => {
-      
-      // الخطوة 1: سجّل العميل
-      const customerResponse = await orderApi.createCustomer(
-        customerData.customerName,
-        customerData.customerPhone
-      )
-      const customerId = customerResponse?.data?.id ?? customerResponse?.id
+  // ── تحويل بيانات الفورم + الكارت لشكل ريم ──
+  const buildPayload = (data: CheckoutFormData): CreateOrderPayload => {
+    // الباك لسه مفيهوش إضافات، فبنكتبها في notes
+    const extrasNote = buildExtrasNote()
+    const notes = [
+      data.notes?.trim(),
+      extrasNote ? `الإضافات: ${extrasNote}` : '',
+    ]
+      .filter(Boolean)
+      .join(' | ')
 
-      // الخطوة 2: حوّل items للشكل المطلوب
-      const orderItems = items.map(item => ({
+    const base = {
+      customerName: data.customerName.trim(),
+      customerPhone: data.customerPhone,
+      order_type: data.order_type,
+      notes: notes || undefined,
+      items: items.map((item) => ({
         product_id: Number(item.menuItemId),
-        quantity: item.quantity
-      }))
-
-      // الخطوة 3: ابعت الأوردر
-      return orderApi.createOrder(customerId, orderItems)
-    },
-
-    // onSuccess: بيتنفذ لو كل حاجة نجحت
-    onSuccess: () => {
-      emptyCart()
-      setIsCheckoutModalOpen(false)
-      close()
-     toast.success('Order placed successfully!') 
-    },
-
-    // onError: بيتنفذ لو حصل أي error → fallback للواتساب
-    onError: (error, customerData) => {
-      console.error('Order failed, falling back to WhatsApp:', error)
-      const whatsappUrl = buildWhatsAppMessage(WA_NUMBER, CURRENCY, customerData)
-      window.open(whatsappUrl, '_blank')
-      emptyCart()
-      setIsCheckoutModalOpen(false)
-      close()
+        size_id: item.sizeId ?? null,
+        quantity: item.quantity,
+      })),
     }
+
+    if (data.order_type === 'delivery') {
+      return { ...base, address: data.address?.trim() }
+    }
+
+    // الفورم بيطلّع HH:mm والباك عايز HH:mm:ss
+    const time = data.timeOnly ?? ''
+    return {
+      ...base,
+      numberOfGuests: Number(data.numberOfGuests),
+      dateOnly: data.dateOnly,
+      timeOnly: time.length === 5 ? `${time}:00` : time,
+    }
+  }
+
+  const finishOrder = (data: CheckoutFormData) => {
+    // لازم نبني رابط الواتساب قبل ما نفضّي الكارت
+    const whatsappUrl = buildWhatsAppMessage(WA_NUMBER, CURRENCY, data)
+    window.open(whatsappUrl, '_blank')
+    emptyCart()
+    setIsCheckoutModalOpen(false)
+    close()
+  }
+
+  const orderMutation = useMutation({
+    mutationFn: (data: CheckoutFormData) => orderApi.create(buildPayload(data)),
+
+    // نجح: الطلب في الأدمن، ونفتح واتساب للمطعم
+    onSuccess: (_res, data) => {
+      toast.success(
+        data.order_type === 'delivery'
+          ? 'تم تسجيل الطلب بنجاح'
+          : 'تم تسجيل الحجز بنجاح'
+      )
+      finishOrder(data)
+    },
+
+    // فشل: نعرض سبب ريم، ونفتح واتساب عشان الطلب ما يضيعش
+    onError: (error: any, data) => {
+      console.error('Order failed, falling back to WhatsApp:', error?.response?.data ?? error)
+      toast.error(
+        error?.response?.data?.message ?? 'تعذر تسجيل الطلب، هنكمل على واتساب'
+      )
+      finishOrder(data)
+    },
   })
 
   const handleCheckout = () => {
@@ -62,10 +93,11 @@ export default function CartSidebar() {
     setIsCheckoutModalOpen(true)
   }
 
-  // 🆕 بدل ما نكتب الـ logic هنا، بنناديها بـ mutate فقط
-  const handleConfirmCheckout = (customerData: CheckoutFormData) => {
-    orderMutation.mutate(customerData)
+  const handleConfirmCheckout = (data: CheckoutFormData) => {
+    orderMutation.mutate(data)
   }
+
+  const disabled = items.length === 0 || orderMutation.isPending
 
   return (
     <>
@@ -96,12 +128,12 @@ export default function CartSidebar() {
                     {item.size && <span className="size-tag">{item.size}</span>}
                     {item.selectedExtras && item.selectedExtras.length > 0 && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                        + {item.selectedExtras.map(e => e.name).join(', ')}
+                        + {item.selectedExtras.map((e) => e.name).join(', ')}
                       </div>
                     )}
                   </div>
                   <div className="cart-item-price">
-                    {CURRENCY}{item.price.toFixed(2)} each
+                    {item.price.toFixed(2)} {CURRENCY} each
                   </div>
                 </div>
 
@@ -121,22 +153,20 @@ export default function CartSidebar() {
         <div className="cart-footer">
           <div className="cart-total">
             <span>Total</span>
-            <span id="cartTotal">{CURRENCY}{total.toFixed(2)}</span>
+            <span id="cartTotal">{total.toFixed(2)} {CURRENCY}</span>
           </div>
 
           <button
             className="checkout-btn"
             onClick={handleCheckout}
-            // 🆕 orderMutation.isPending جاهز تلقائياً من TanStack Query
-            disabled={items.length === 0 || orderMutation.isPending}
+            disabled={disabled}
             style={{
               display: 'block', width: '100%', textAlign: 'center', border: 'none',
-              cursor: (items.length === 0 || orderMutation.isPending) ? 'not-allowed' : 'pointer',
-              opacity: (items.length === 0 || orderMutation.isPending) ? 0.5 : 1
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              opacity: disabled ? 0.5 : 1,
             }}
           >
-            {/* 🆕 isPending بيتغير تلقائياً لما الـ mutation شغالة */}
-           {orderMutation.isPending ? 'Placing order...' : 'Order via WhatsApp'}
+            {orderMutation.isPending ? 'Placing order...' : 'Place Order'}
           </button>
         </div>
 

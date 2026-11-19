@@ -2,7 +2,7 @@
 export type MenuCategory = 'starters' | 'mains' | 'desserts' | 'drinks'
 // 'type' هنا لأننا بنحدد "اختيار من عدة قيم" مش object
 export interface MenuItemSize {
-  id?: string;     
+ id?: string | number;  
   label?: string;   
   name?: string;    
   price: number;
@@ -30,14 +30,15 @@ export interface MenuItem {
 
 // ─── Cart ───────────────────────────────────────────────────
 export interface CartItem {
-  id: string          
-  menuItemId: string  
+  id: string
+  menuItemId: string
   name: string
-  price: number       
+  price: number
   image: string
   quantity: number
   size?: string
-  selectedExtras?: Extra[] // ← تسجيل الإضافات المختار في الكارت بشكل اختياري
+  sizeId?: number | null   // 🆕 رقم الحجم اللي الباك محتاجه
+  selectedExtras?: Extra[]
 }
 
 // ─── Order ──────────────────────────────────────────────────
@@ -210,4 +211,45 @@ export type ExtraFormData = {
   name: string
   price: number
   isAvailableAlone: boolean
+}
+
+// ─── Orders (شكل ريم الحقيقي) ──────────────────────────────
+export type ApiOrderStatus =
+  | 'pending'
+  | 'preparing'
+  | 'delivered'
+  | 'cancelled'
+  | 'completed'
+
+export interface ApiOrderItem {
+  id: number
+  product_name: string
+  size_name: string | null
+  quantity: number
+  unit_price: number
+  subtotal: number
+}
+
+export interface ApiOrder {
+  id: number
+  order_type: 'delivery' | 'reservation'
+  status: ApiOrderStatus
+  total_price: number
+  is_reviewed: boolean
+  can_review: boolean
+  customer: {
+    id: number
+    name: string
+    phone: string
+    last_address: string | null
+  }
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  number_of_guests: number | null
+  date_only: string | null   // YYYY-MM-DD
+  time_only: string | null   // HH:mm:ss
+  notes: string | null
+  items: ApiOrderItem[]
+  created_at: string
 }

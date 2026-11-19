@@ -1,25 +1,25 @@
-// ─── Menu ───────────────────────────────────────────────────
+/// ─── API Layer ──────────────────────────────────────────────
 import { CreateProductDto, Extra, CreateExtraDto } from '@/types'
 import axios from 'axios'
-import { ReservationData, ReviewData } from './schemas'
+import { ReservationData } from './schemas'
 
-const isServer = typeof window === "undefined"
+const isServer = typeof window === 'undefined'
 
 export const api = axios.create({
-  // 🆕 العنوان من متغير البيئة (على السيرفر) أو من الـ proxy (في المتصفح)
-  baseURL: isServer ? process.env.API_URL : "/api/remote",
-  // 🆕 عشان لارافيل يرد JSON حتى في الأخطاء
+  // على السيرفر: العنوان من متغير البيئة | في المتصفح: عن طريق الجرسون
+  baseURL: isServer ? process.env.API_URL : '/api/remote',
+  // عشان لارافيل يرد JSON حتى في الأخطاء
   headers: { Accept: 'application/json' },
 })
 
-// ── 1️⃣ خدمات المنتجات (Products) ──
+// ── 1️⃣ المنتجات (Products) ──
 export const productApi = {
   getAll: async () => {
     const response = await api.get('/products')
     return response.data.data
   },
 
-  // 🆕 ريم ملهاش endpoint لمنتج واحد ولا لقسم ولا بحث، فبنفلتر من القايمة
+  // الفلترة من القايمة (ممكن نستخدم ?category_id= و ?name= من ريم بعدين)
   getById: async (id: string) => {
     const all = await productApi.getAll()
     return all.find((p: any) => String(p.id) === String(id))
@@ -35,15 +35,17 @@ export const productApi = {
   },
 
   create: (data: CreateProductDto | FormData) => api.post('/products', data),
- // لارافيل مابيقراش multipart مع PUT، فنبعت POST + _method=PUT
-update: (id: string | number, data: FormData) => {
-  data.append('_method', 'PUT')
-  return api.post(`/products/${id}`, data)
-},
+
+  // لارافيل مابيقراش multipart مع PUT، فنبعت POST + _method=PUT
+  update: (id: string | number, data: FormData) => {
+    data.append('_method', 'PUT')
+    return api.post(`/products/${id}`, data)
+  },
+
   delete: (id: string | number) => api.delete(`/products/${id}`),
 }
 
-// ── 2️⃣ خدمات الأقسام (Category) ──
+// ── 2️⃣ الأقسام (Category) ──
 export const categoryApi = {
   getAll: async () => {
     const response = await api.get('/categories')
@@ -54,20 +56,16 @@ export const categoryApi = {
     const formData = new FormData()
     formData.append('name', data.name)
     formData.append('description', data.description ?? data.name)
-    if (data.imageFile) {
-      formData.append('image', data.imageFile)
-    }
+    if (data.imageFile) formData.append('image', data.imageFile)
     return api.post('/categories', formData)
   },
 
   update: async (id: string | number, data: { name: string; description?: string; imageFile?: File | null }) => {
     const formData = new FormData()
-    formData.append('_method', 'PUT') // 🆕 لارافيل مبيقراش multipart مع PUT مباشرة
+    formData.append('_method', 'PUT')
     formData.append('name', data.name)
     formData.append('description', data.description ?? data.name)
-    if (data.imageFile) {
-      formData.append('image', data.imageFile)
-    }
+    if (data.imageFile) formData.append('image', data.imageFile)
     return api.post(`/categories/${Number(id)}`, formData)
   },
 
@@ -76,42 +74,87 @@ export const categoryApi = {
   },
 }
 
-// ── 3️⃣ خدمات الحجوزات (Reservation) — لسه ريم ما عملتهاش ──
+// ── 3️⃣ الطلبات والحجوزات (Orders) — نفس الـ endpoint ──
+export type OrderType = 'delivery' | 'reservation'
+
+export interface CreateOrderPayload {
+  customerName: string
+  customerPhone: string
+  order_type: OrderType
+  // دليفري
+  address?: string
+  latitude?: number
+  longitude?: number
+  // حجز
+  numberOfGuests?: number
+  dateOnly?: string // YYYY-MM-DD
+  timeOnly?: string // HH:mm:ss
+  notes?: string
+  items: { product_id: number; size_id: number | null; quantity: number }[]
+}
+
+export const orderApi = {
+  // عميل: إنشاء طلب دليفري أو حجز طاولة
+  create: async (payload: CreateOrderPayload) => {
+    const response = await api.post('/orders', payload)
+    return response.data
+  },
+
+  // أدمن: كل الطلبات والحجوزات
+  getAll: async () => {
+    const response = await api.get('/orders')
+    return response.data.data || response.data
+  },
+
+  // أدمن: pending | preparing | delivered | cancelled | completed
+  updateStatus: async (id: string | number, status: string) => {
+    return api.patch(`/orders/${Number(id)}/status`, { status })
+  },
+
+  // عميل: تتبع طلباته بالتليفون (لازم ريم تخليها query)
+  track: async (phone: string) => {
+    const response = await api.get('/orders/track', { params: { phone } })
+    return response.data.data || response.data
+  },
+}
+
+// ── 4️⃣ التقييمات (Reviews) — مربوطة بـ order_id ──
+export interface CreateReviewPayload {
+  order_id: number
+  customerPhone: string
+  rating: number
+  comment: string
+}
+
+export const reviewApi = {
+  getAll: async () => {
+    const response = await api.get('/reviews')
+    return response.data.data || response.data
+  },
+  create: async (data: CreateReviewPayload) => {
+    const response = await api.post('/reviews', data)
+    return response.data
+  },
+  delete: async (id: string | number) => {
+    return api.delete(`/reviews/${Number(id)}`)
+  },
+}
+
+// ── 5️⃣ الحجوزات (Legacy) — هتتشال لما نربط الحجز بـ orderApi ──
 export const reservationApi = {
   getAll: async () => {
     const response = await api.get('/Reservation')
     return response.data.data || response.data
   },
-
   updateStatus: async (id: string | number, status: number) => {
-    const numericId = Number(id)
-    return api.patch(`/Reservation/${numericId}/status`, {
-      orderStatus: status
-    })
+    return api.patch(`/Reservation/${Number(id)}/status`, { orderStatus: status })
   },
-
   create: async (data: ReservationData) => {
     return api.post('/Reservation', data)
-  }
+  },
 }
 
-// ── 4️⃣ خدمات التقييمات (Review) — لسه ──
-export const reviewApi = {
-  getAll: async () => {
-    const response = await api.get('/Review')
-    return response.data.data || response.data
-  },
-  create: async (data: ReviewData) => {
-    const response = await api.post('/Review', data)
-    return response.data
-  },
-  delete: async (id: string | number) => {
-    const numericId = Number(id)
-    return api.delete(`/Review/${numericId}`)
-  }
-}
-
-// ── 5️⃣ خدمات العملاء (Customer) — لسه ──
+// ── 6️⃣ العملاء (Customer) — ريم لسه شغالة عليها ──
 export const customerApi = {
   getAll: async () => {
     const response = await api.get('/Customer')
@@ -131,48 +174,27 @@ export const customerApi = {
   },
 }
 
-// ── 6️⃣ خدمات الإضافات (Extra) — لسه ──
+// ── 7️⃣ الإضافات (Extra) — ريم لسه شغالة عليها ──
 export const extraApi = {
   getAll: async (): Promise<Extra[]> => {
     const response = await api.get('/Extra')
     return response.data.data || response.data
   },
-
   create: async (data: CreateExtraDto) => {
     return api.post('/Extra', data)
   },
-
   getAvailable: async (): Promise<Extra[]> => {
     const response = await api.get('/Extra/AvailableExtras')
     return response.data.data || response.data
   },
-
   getById: async (id: string | number): Promise<Extra> => {
     const response = await api.get(`/Extra/${id}`)
     return response.data.data || response.data
   },
-
   update: async (id: string | number, data: CreateExtraDto) => {
     return api.put(`/Extra/${id}`, data)
   },
-
   delete: async (id: string | number) => {
     return api.delete(`/Extra/${id}`)
-  }
-}
-
-// ── 7️⃣ خدمات الأوردر (Order) — لسه ──
-export const orderApi = {
-  createCustomer: async (name: string, phone: string) => {
-    const response = await api.post('/Customer', { name, phone })
-    return response.data
   },
-
-  createOrder: async (customerId: number, items: { product_id: number, quantity: number }[]) => {
-    const response = await api.post('/Order', {
-      customer_id: customerId,
-      items
-    })
-    return response.data
-  }
 }
