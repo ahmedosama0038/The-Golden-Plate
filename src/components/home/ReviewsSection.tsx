@@ -1,96 +1,39 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, type Resolver } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
-import { useAnimate } from '@/hooks/useAnimate'
-import { api, reviewApi } from '@/lib/api'
-import { toast } from '@/lib/toast'
-
-// 🎯 استدعاء السكيمة والـ Type اللي أنت عاملهم في ملف السكيمات بتاعك
-import { reviewSchema, ReviewData } from '../../lib/schemas' // 👈 عدل المسار حسب مكان ملفك
+import { useState }    from 'react'
+import { useQuery }    from '@tanstack/react-query'
+import { useAnimate }  from '@/hooks/useAnimate'
+import { reviewApi }   from '@/lib/api'
+import ReviewForm      from '@/components/reviews/ReviewForm'
 
 function Stars({ rating }: { rating: number }) {
-  const parsedRate = Math.min(5, Math.max(0, Number(rating)))
   return (
     <div className="review-stars">
-      {'★'.repeat(parsedRate)}{'☆'.repeat(5 - parsedRate)}
+      {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
     </div>
   )
 }
 
-export default function ReviewsSection({ productId }: { productId?: number }) {
+export default function ReviewsSection() {
   useAnimate()
-  const queryClient = useQueryClient()
-  const [success, setSuccess] = useState(false)
 
-  // ── 1. ربط React Hook Form بالسكيمة بتاعتك تلقائياً ──
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors }
-  } = useForm<ReviewData>({
-    resolver: zodResolver(reviewSchema) as Resolver<ReviewData>,
-    defaultValues: {
-      customerName: '',
-      customerPhone: '',
-      rating: 5,
-      comment: '',
-    }
-  })
+  const [success, setSuccess] = useState(false)
+  // تغيير الـ key بيعمل reset كامل للفورم بعد الإرسال
+  const [formKey, setFormKey] = useState(0)
 
   // ── جيب الـ reviews ──
-  const { data: reviews = [], isLoading } = useQuery<any[]>({
+  const { data: reviewsRaw = [], isLoading } = useQuery<any[]>({
     queryKey: ['reviews'],
     queryFn:  reviewApi.getAll,
   })
+  const reviews = Array.isArray(reviewsRaw) ? reviewsRaw : []
 
-  // ── Mutation ──
-  const createMutation = useMutation({
-    mutationFn: (data: any) => reviewApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reviews'] })
-      
-      setSuccess(true)
-      reset() // 👈 تصفير كل الـ inputs بلمسة واحدة من RHF
-
-      setTimeout(() => {
-        setSuccess(false)
-        window.location.reload()
-      }, 1000)
-    },
-    onError: (err: any) => {
-      toast.error('Failed to submit review', err.response?.data?.message || err.message)
-    },
-  })
-
-  // ── 2. دالة الـ Submit النظيفة (البيانات بتجيلها متفلترة وجاهزة) ──
-  // ── دالة الـ Submit المعدلة ──
- const onSubmit = async (data: ReviewData) => {
-  const cleanProductId = Number(productId) || 1
-
-  // ── تأكد إن الـ Customer موجود الأول ──
-  try {
-    await api.post('/Customer', {
-      name: data.customerName.trim(),
-      phone: data.customerPhone.trim(),
-    })
-  } catch {
-    // لو الـ Customer موجود أصلاً → مش مشكلة، كمّل
+  const handleDone = () => {
+    setSuccess(true)
+    setFormKey((k) => k + 1)
+    setTimeout(() => setSuccess(false), 5000)
   }
 
-  const realPayload = {
-    rating:        Number(data.rating),
-    comment:       data.comment.trim(),
-    customerName:  data.customerName.trim(),
-    customerPhone: data.customerPhone.trim(),
-    productId:     cleanProductId,
-  }
-
-  createMutation.mutate(realPayload)
-}
   return (
     <>
       {/* ── Reviews Display ── */}
@@ -115,15 +58,15 @@ export default function ReviewsSection({ productId }: { productId?: number }) {
               </div>
             ) : (
               reviews.map((review) => {
-                const id           = review.id           || review.Id || review.ID
-                const rateValue    = review.rating       || review.Rating || review.rate || 0
-                const commentText  = review.comment      || review.Comment || review.text || '—'
-                const reviewerName = review.customerName || review.CustomerName || review.name || `Guest #${review.customerId || 0}`
+                const rateValue = Math.min(5, Math.max(0, Math.round(Number(review.rating) || 0)))
+                const commentText = review.comment ?? '—'
+                const reviewerName: string =
+                  review.customer?.name ?? review.customer_name ?? review.customerName ?? 'Guest'
 
                 return (
-                  <div key={id} className="review-card animate">
+                  <div key={review.id} className="review-card animate">
                     <Stars rating={rateValue} />
-                    <p className="review-text">"{commentText}"</p>
+                    <p className="review-text">&ldquo;{commentText}&rdquo;</p>
                     <div className="review-author">
                       <div className="review-avatar">{reviewerName[0] || 'G'}</div>
                       <div>
@@ -148,7 +91,7 @@ export default function ReviewsSection({ productId }: { productId?: number }) {
         </div>
       </section>
 
-      {/* ── Write a Review Form ── */}
+      {/* ── Write a Review ── */}
       <section className="section" id="reviewSection">
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div className="section-header animate">
@@ -158,66 +101,7 @@ export default function ReviewsSection({ productId }: { productId?: number }) {
           </div>
 
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '2rem' }}>
-            
-            {/* 🎯 ربط الفورم بـ handleSubmit بتاع المكتبة */}
-            <form onSubmit={handleSubmit(onSubmit)}>
-
-              {/* Name */}
-              <div className="form-group">
-                <label>Your Name</label>
-                <input
-                  type="text"
-                  placeholder="James Mitchell"
-                  {...register('customerName')} // 👈 تدمير الـ useState والـ onChange تماماً
-                />
-                {errors.customerName && <p className="error-msg" style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.3rem' }}>{errors.customerName.message}</p>}
-              </div>
-
-              {/* Phone */}
-              <div className="form-group">
-                <label>Phone</label>
-                <input
-                  type="tel"
-                  placeholder="01XXXXXXXXX"
-                  {...register('customerPhone')}
-                />
-                {errors.customerPhone && <p className="error-msg" style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.3rem' }}>{errors.customerPhone.message}</p>}
-              </div>
-
-              {/* Rating */}
-              <div className="form-group">
-                <label>Rating</label>
-                <select {...register('rating')}>
-                  <option value="5">★★★★★ Excellent</option>
-                  <option value="4">★★★★ Very Good</option>
-                  <option value="3">★★★ Good</option>
-                  <option value="2">★★ Fair</option>
-                  <option value="1">★ Poor</option>
-                </select>
-              </div>
-
-              {/* Review */}
-              <div className="form-group">
-                <label>Your Review</label>
-                <textarea
-                  rows={4}
-                  placeholder="Tell us about your experience..."
-                  {...register('comment')}
-                />
-                {errors.comment && <p className="error-msg" style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.3rem' }}>{errors.comment.message}</p>}
-              </div>
-
-              <button
-                type="submit"
-                className="submit-btn"
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending
-                  ? <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '0.4rem' }} /> Submitting...</>
-                  : 'Submit Review'
-                }
-              </button>
-            </form>
+            <ReviewForm key={formKey} onDone={handleDone} />
 
             {success && (
               <div style={{ marginTop: '1rem', padding: '0.9rem', background: 'rgba(34,197,94,0.08)', border: '1px solid #22c55e', color: '#22c55e', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' }}>
