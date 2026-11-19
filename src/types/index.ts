@@ -183,14 +183,13 @@ export interface Category {
 }
 
 export interface CreateProductDto {
+  category_id: number
   name:        string
   description: string
-  discount:    number
-  categoryId:  number
-  priceList:   { price: number; size: number }[]
-  ingredients: string[]
+  is_active:   boolean
+  base_price?: number                                  // لو المنتج من غير أحجام
+  sizes?:      { size_name: string; price: number }[]  // لو المنتج ليه أحجام
 }
-
 // ─── Extras (الإضافات الجديدة) ─────────────────────────────────
 export interface Extra {
   id: string | number

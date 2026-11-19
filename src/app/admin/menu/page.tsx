@@ -46,8 +46,9 @@ export default function AdminMenuPage() {
     mutationFn: (id: string | number) => productApi.delete(id),
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Item deleted successfully')
-      
+
       setLocalImages(prev => {
         const updated = { ...prev }
         delete updated[String(id)]
@@ -61,9 +62,8 @@ export default function AdminMenuPage() {
 
   const filtered = items.filter((item) => {
     const itemAny = item as any
-    const currentCatId = typeof item.category === 'object' && item.category !== null
-      ? String((item.category as any).id)
-      : String(itemAny.categoryId || item.category)
+    // 🆕 رقم القسم من الشكل الجديد (category_id) أو القديم
+    const currentCatId = String(itemAny.category_id ?? itemAny.categoryId ?? '')
 
     const matchCat = filter === 'all' || currentCatId === String(filter)
     const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase())
@@ -73,10 +73,10 @@ export default function AdminMenuPage() {
   return (
     <>
       <TopBar title="Menu Management" subtitle="Add, edit, or remove dishes from the menu." />
-      
+
       <div className="adm-content">
-        
-        {/* Toolbar - الفلترة والبحث والإضافة بنفس ديزاين الـ Extras الموحد */}
+
+        {/* Toolbar - الفلترة والبحث والإضافة */}
         <div className="adm-toolbar">
           <div className="adm-search-wrap">
             <i className="fa-solid fa-magnifying-glass" />
@@ -90,16 +90,16 @@ export default function AdminMenuPage() {
           </div>
 
           <div className="adm-filter-group">
-            <button 
-              onClick={() => setFilter('all')} 
+            <button
+              onClick={() => setFilter('all')}
               className={`adm-btn-tab ${filter === 'all' ? 'active' : ''}`}
             >
               All
             </button>
             {categories.map((c) => (
-              <button 
-                key={c.id} 
-                onClick={() => setFilter(c.id)} 
+              <button
+                key={c.id}
+                onClick={() => setFilter(c.id)}
                 className={`adm-btn-tab ${filter === c.id ? 'active' : ''}`}
               >
                 {c.name}
@@ -107,8 +107,8 @@ export default function AdminMenuPage() {
             ))}
           </div>
 
-          <button 
-            className="adm-btn primary" 
+          <button
+            className="adm-btn primary"
             onClick={() => { setSelectedItem(null); setShowModal(true); }}
           >
             <i className="fa-solid fa-plus" /> Add New Dish
@@ -123,7 +123,7 @@ export default function AdminMenuPage() {
           </div>
         )}
 
-        {/* Table - جدول فخم متناسق ومطابق للصورة المطلوبة */}
+        {/* Table */}
         {!isLoading && (
           <div className="adm-table-wrap">
             <table className="adm-table">
@@ -140,20 +140,23 @@ export default function AdminMenuPage() {
                 {filtered.map((item) => {
                   const itemAny = item as any
 
-                  const displayPrice = itemAny.priceList && itemAny.priceList.length > 0 
-                    ? `$${itemAny.priceList[0].price}` 
-                    : `$${itemAny.price || 0}`
+                  // 🆕 السعر: أول حجم (الشكل الجديد) أو base_price
+                  const firstSize = itemAny.sizes?.[0]
+                  const displayPrice = firstSize
+                    ? `From ${firstSize.price} ج.م`
+                    : `${itemAny.base_price ?? itemAny.price ?? 0} ج.م`
 
                   const backendSrc = itemAny.imageUrl || itemAny.image
-                  
-                  const dynamicSrc = localImages[String(item.id)] || localImages[item.name] || 
-                    ((backendSrc && typeof backendSrc === 'string' && backendSrc.startsWith('http')) 
-                      ? backendSrc 
+
+                  const dynamicSrc = localImages[String(item.id)] || localImages[item.name] ||
+                    ((backendSrc && typeof backendSrc === 'string' && backendSrc.startsWith('http'))
+                      ? backendSrc
                       : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200&auto=format&fit=crop')
 
-                  const categoryName = typeof item.category === 'object' && item.category !== null
-                    ? (item.category as any).name 
-                    : categories.find(c => String(c.id) === String(itemAny.categoryId || item.category))?.name || 'Mains'
+                  // 🆕 اسم القسم من category_id
+                  const categoryName = categories.find(
+                    (c) => String(c.id) === String(itemAny.category_id ?? itemAny.categoryId)
+                  )?.name || '—'
 
                   return (
                     <tr key={item.id} className="adm-table-row">
@@ -185,8 +188,8 @@ export default function AdminMenuPage() {
                       </td>
                       <td>
                         <div className="adm-actions-cell">
-                          <button 
-                            className="adm-action-btn edit" 
+                          <button
+                            className="adm-action-btn edit"
                             onClick={() => { setSelectedItem(item); setShowModal(true); }}
                             title="Edit Dish"
                           >
@@ -197,8 +200,8 @@ export default function AdminMenuPage() {
                             disabled={deleteMutation.isPending}
                             onClick={() => {
                               toast.confirm(
-                                'Delete Dish', 
-                                `Are you sure you want to remove "${item.name}"?`, 
+                                'Delete Dish',
+                                `Are you sure you want to remove "${item.name}"?`,
                                 () => deleteMutation.mutate(item.id)
                               )
                             }}
@@ -211,7 +214,7 @@ export default function AdminMenuPage() {
                     </tr>
                   )
                 })}
-                
+
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={5} className="adm-empty-table">
@@ -228,17 +231,11 @@ export default function AdminMenuPage() {
 
       {/* Add / Edit Modal */}
       {showModal && (
-        <AddProductModal
-          categories={categories}
-          editItem={selectedItem}
-          onClose={() => { setShowModal(false); setSelectedItem(null); }}
-          onProductAdded={(name: string, imgSrc: string) => {
-            if (imgSrc) {
-              const key = selectedItem?.id || name
-              setLocalImages(prev => ({ ...prev, [String(key)]: imgSrc }))
-            }
-          }}
-        />
+             <AddProductModal
+  categories={categories}
+  editItem={selectedItem}
+  onClose={() => { setShowModal(false); setSelectedItem(null); }}
+/>
       )}
     </>
   )

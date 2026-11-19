@@ -2,9 +2,8 @@ import { z } from 'zod'
 
 // ─── Login ───────────────────────────────────────────────────
 export const loginSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/, 'Password must contain letters and numbers'),
+  email: z.string().email('Enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
 })
 export type LoginData = z.infer<typeof loginSchema>
 

@@ -1,101 +1,82 @@
 // ─── Menu ───────────────────────────────────────────────────
-export const dynamic = "force-dynamic";
 import { CreateProductDto, Extra, CreateExtraDto } from '@/types'
 import axios from 'axios'
 import { ReservationData, ReviewData } from './schemas'
 
-const isServer = typeof window === "undefined";
+const isServer = typeof window === "undefined"
 
 export const api = axios.create({
-  baseURL: isServer
-    ? "https://goldenapi.site.je/api"   // 🆕 الدومين الجديد بتاع سيف
-    : "/api/remote",
-})
-
-// Interceptor — بيضيف الـ token تلقائي في كل request (شغال زي ما هو ومفيهوش أي مشكلة)
-api.interceptors.request.use((config) => {
-  const token = typeof document !== 'undefined'
-    ? document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('token='))
-        ?.split('=')[1]
-    : undefined
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
+  // 🆕 العنوان من متغير البيئة (على السيرفر) أو من الـ proxy (في المتصفح)
+  baseURL: isServer ? process.env.API_URL : "/api/remote",
+  // 🆕 عشان لارافيل يرد JSON حتى في الأخطاء
+  headers: { Accept: 'application/json' },
 })
 
 // ── 1️⃣ خدمات المنتجات (Products) ──
 export const productApi = {
   getAll: async () => {
-    const response = await api.get('/Product')
+    const response = await api.get('/products')
     return response.data.data
   },
+
+  // 🆕 ريم ملهاش endpoint لمنتج واحد ولا لقسم ولا بحث، فبنفلتر من القايمة
   getById: async (id: string) => {
-    const response = await api.get(`/Product/${id}`)
-    return response.data.data
+    const all = await productApi.getAll()
+    return all.find((p: any) => String(p.id) === String(id))
   },
   getByCategory: async (categoryId: string) => {
-    const response = await api.get(`/Product/category/${categoryId}`)
-    return response.data.data
+    const all = await productApi.getAll()
+    return all.filter((p: any) => String(p.category_id) === String(categoryId))
   },
   search: async (query: string) => {
-    const response = await api.get('/Product/search', { params: { query } })
-    return response.data.data
+    const all = await productApi.getAll()
+    const q = query.toLowerCase()
+    return all.filter((p: any) => p.name?.toLowerCase().includes(q))
   },
-  create: (data: CreateProductDto) => api.post('/Product', data),
-  update:  (id: string, data: any) => api.put(`/Product/${id}`, data),
-  delete: (id: string | number) => api.put(`/Product/${id}/SoftDelete`),
+
+  create: (data: CreateProductDto | FormData) => api.post('/products', data),
+ // لارافيل مابيقراش multipart مع PUT، فنبعت POST + _method=PUT
+update: (id: string | number, data: FormData) => {
+  data.append('_method', 'PUT')
+  return api.post(`/products/${id}`, data)
+},
+  delete: (id: string | number) => api.delete(`/products/${id}`),
 }
 
 // ── 2️⃣ خدمات الأقسام (Category) ──
 export const categoryApi = {
   getAll: async () => {
-    const response = await api.get('/Category')
+    const response = await api.get('/categories')
     return response.data.data || response.data
   },
-  
-  create: async (data: { name: string; imageFile?: File | null }) => {
-    const formData = new FormData()
-    formData.append('Name', data.name)
-    if (data.imageFile) {
-      formData.append('ImageOfCategory', data.imageFile)
-    }
 
-    return api.post('/Category', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+  create: async (data: { name: string; description?: string; imageFile?: File | null }) => {
+    const formData = new FormData()
+    formData.append('name', data.name)
+    formData.append('description', data.description ?? data.name)
+    if (data.imageFile) {
+      formData.append('image', data.imageFile)
+    }
+    return api.post('/categories', formData)
   },
 
-  update: async (id: string | number, data: { name: string; imageFile?: File | null }) => {
-    const numericId = Number(id)
+  update: async (id: string | number, data: { name: string; description?: string; imageFile?: File | null }) => {
     const formData = new FormData()
-    
-    formData.append('Id', String(numericId))
-    formData.append('Name', data.name)
-    
+    formData.append('_method', 'PUT') // 🆕 لارافيل مبيقراش multipart مع PUT مباشرة
+    formData.append('name', data.name)
+    formData.append('description', data.description ?? data.name)
     if (data.imageFile) {
-      formData.append('ImageOfCategory', data.imageFile)
+      formData.append('image', data.imageFile)
     }
-
-    return api.put(`/Category/${numericId}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    return api.post(`/categories/${Number(id)}`, formData)
   },
 
   delete: async (id: string | number) => {
-    const numericId = Number(id)
-    return api.delete(`/Category/${numericId}`)
-  }
+    return api.delete(`/categories/${Number(id)}`)
+  },
 }
 
-// ── 3️⃣ خدمات الحجوزات (Reservation) ──
+// ── 3️⃣ خدمات الحجوزات (Reservation) — لسه ريم ما عملتهاش ──
 export const reservationApi = {
   getAll: async () => {
     const response = await api.get('/Reservation')
@@ -114,7 +95,7 @@ export const reservationApi = {
   }
 }
 
-// ── 4️⃣ خدمات التقييمات (Review) ──
+// ── 4️⃣ خدمات التقييمات (Review) — لسه ──
 export const reviewApi = {
   getAll: async () => {
     const response = await api.get('/Review')
@@ -130,7 +111,7 @@ export const reviewApi = {
   }
 }
 
-// ── 5️⃣ خدمات العملاء (Customer) ──
+// ── 5️⃣ خدمات العملاء (Customer) — لسه ──
 export const customerApi = {
   getAll: async () => {
     const response = await api.get('/Customer')
@@ -150,58 +131,48 @@ export const customerApi = {
   },
 }
 
-// ── 6️⃣ خدمات الإضافات (Extra) ──
+// ── 6️⃣ خدمات الإضافات (Extra) — لسه ──
 export const extraApi = {
-  // 1. GET ALL EXTRAS
   getAll: async (): Promise<Extra[]> => {
     const response = await api.get('/Extra')
     return response.data.data || response.data
   },
 
-  // 2. POST (ADD NEW EXTRA)
   create: async (data: CreateExtraDto) => {
     return api.post('/Extra', data)
   },
 
-  // 3. GET AVAILABLE EXTRAS ONLY
   getAvailable: async (): Promise<Extra[]> => {
     const response = await api.get('/Extra/AvailableExtras')
     return response.data.data || response.data
   },
 
-  // 4. GET EXTRA BY ID
   getById: async (id: string | number): Promise<Extra> => {
     const response = await api.get(`/Extra/${id}`)
     return response.data.data || response.data
   },
 
-  // 5. PUT (UPDATE EXTRA)
   update: async (id: string | number, data: CreateExtraDto) => {
     return api.put(`/Extra/${id}`, data)
   },
 
-  // 6. DELETE EXTRA
   delete: async (id: string | number) => {
     return api.delete(`/Extra/${id}`)
   }
 }
 
-// ── 7️⃣ خدمات الأوردر (Order) ──
+// ── 7️⃣ خدمات الأوردر (Order) — لسه ──
 export const orderApi = {
-  // إنشاء عميل جديد أو البحث عنه
   createCustomer: async (name: string, phone: string) => {
     const response = await api.post('/Customer', { name, phone })
     return response.data
-    // بيرجع: { id: 1, name: "Ahmed", phone: "01021245010" }
   },
 
-  // إنشاء أوردر جديد
   createOrder: async (customerId: number, items: { product_id: number, quantity: number }[]) => {
     const response = await api.post('/Order', {
       customer_id: customerId,
       items
     })
     return response.data
-    // بيرجع: { id: 1, status: "pending", ... }
   }
 }

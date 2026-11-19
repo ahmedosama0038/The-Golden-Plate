@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
- 
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,16 +16,6 @@ const nextConfig = {
       },
     ],
   },
-
-  async rewrites() {
-    return [
-      {
-        source: '/api/remote/:path*',
-        destination: 'https://myrestaurant.runasp.net/api/:path*',
-      },
-    ];
-  },
-
 };
 
 export default nextConfig;

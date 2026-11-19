@@ -9,7 +9,7 @@ import {
   selectCartItems, selectCartCount, selectCartTotal, selectCartIsOpen,
 } from '@/store/slices/cartSlice'
 import type { CartItem, MenuItem, MenuItemSize, Extra } from '@/types'
-import type { CheckoutFormData } from '@/lib/schemas' // 👈 عدّل المسار حسب مكان ملف schemas.ts عندك
+import type { CheckoutFormData } from '@/lib/schemas'
 
 export function useCart() {
   const dispatch = useAppDispatch()
@@ -21,7 +21,15 @@ export function useCart() {
   const addToCart = (item: MenuItem, selectedSize?: MenuItemSize, selectedExtras?: Extra[]) => {
     const extrasTotal = selectedExtras?.reduce((sum, e) => sum + e.price, 0) ?? 0
     const price       = (selectedSize ? selectedSize.price : item.price) + extrasTotal
-    const cartItemId  = selectedSize ? `${item.id}_${selectedSize.label}` : item.id
+
+    // الـ id بيتبني من: المنتج + الحجم + الإضافات
+    const extrasKey = (selectedExtras ?? [])
+      .map((e) => e.id)
+      .sort()
+      .join('-')
+
+    const baseId     = selectedSize ? `${item.id}_${selectedSize.label}` : String(item.id)
+    const cartItemId = extrasKey ? `${baseId}_${extrasKey}` : baseId
 
     const cartItem: CartItem = {
       id:          String(cartItemId),
@@ -43,17 +51,19 @@ export function useCart() {
   const open            = () => dispatch(openCart())
   const close           = () => dispatch(closeCart())
 
-  // 🆕 بقت تقبل بارامتر تالت "customer" — بيانات العميل من الـ CheckoutModal
   const buildWhatsAppMessage = (
     waNumber: string,
     currency: string,
     customer: CheckoutFormData
   ) => {
-    const lines = items.map(
-      (i) => `• ${i.name}${i.size ? ` (${i.size})` : ''} x${i.quantity} = ${currency}${(i.price * i.quantity).toFixed(2)}`
-    )
+    // 🆕 بنكتب الإضافات في سطر كل منتج
+    const lines = items.map((i) => {
+      const extras = i.selectedExtras?.length
+        ? ` + ${i.selectedExtras.map((e) => e.name).join(', ')}`
+        : ''
+      return `• ${i.name}${i.size ? ` (${i.size})` : ''}${extras} x${i.quantity} = ${currency}${(i.price * i.quantity).toFixed(2)}`
+    })
 
-    // 🆕 سطرين بيانات العميل، بيتحطوا فوق قايمة المنتجات
     const customerLines = [
       `👤 *Name:* ${customer.customerName}`,
       `📞 *Phone:* ${customer.customerPhone}`,

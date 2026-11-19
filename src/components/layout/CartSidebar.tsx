@@ -7,7 +7,7 @@ import CheckoutModal from './CheckoutModal'
 import { CheckoutFormData } from '@/lib/schemas'
 import { orderApi } from '@/lib/api' // 🆕 استورد orderApi
 import { toast } from '@/lib/toast'
-const CURRENCY = '$'
+const CURRENCY = 'ج.م'
 const WA_NUMBER = '201021245010'
 
 export default function CartSidebar() {

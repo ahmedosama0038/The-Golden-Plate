@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, LoginData } from '@/lib/schemas'
 import { login } from '@/lib/auth'
 
-
 export default function AdminLoginPage() {
   const router = useRouter()
   const [error, setError] = useState('')
@@ -21,23 +20,21 @@ export default function AdminLoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
+  const onSubmit = async (data: LoginData) => {
+    setError('')
+    try {
+      const result = await login(data.email, data.password)
 
-// ...
-
-const onSubmit = async (data: LoginData) => {
-  setError('')
-  try {
-    const result = await login(data.username, data.password)
-
-    if (result.success) {
-      router.push('/admin/dashboard')
-    } else {
-      setError('Invalid credentials')
+      if (result.success) {
+        router.push('/admin/dashboard')
+      } else {
+        // 🆕 رسالة ريم الحقيقية (أو "السيرفر مش شغال")
+        setError(result.message ?? 'Login failed')
+      }
+    } catch {
+      setError('Something went wrong, please try again')
     }
-  } catch (err) {
-    setError('Invalid credentials')
   }
-}
 
   return (
     <div className="adm-login-wrap">
@@ -54,11 +51,12 @@ const onSubmit = async (data: LoginData) => {
         <form onSubmit={handleSubmit(onSubmit)} className="login-form">
 
           <div className="input-group">
-            <input {...register('username')} placeholder=" " id="username" />
-            <label htmlFor="username">Username</label>
-            {errors.username && (
+            {/* 🆕 email بدل username */}
+            <input {...register('email')} type="email" placeholder=" " id="email" />
+            <label htmlFor="email">Email</label>
+            {errors.email && (
               <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
-                {errors.username.message}
+                {errors.email.message}
               </span>
             )}
           </div>
