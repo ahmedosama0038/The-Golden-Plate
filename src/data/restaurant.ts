@@ -1,176 +1,14 @@
 // ============================================================
 //  data/restaurant.ts  —  بيانات المطعم
-// ============================================================
-//
-//  ده أصله gp-data.js في المشروع القديم
-//
-//  الفرق في النسخة الجديدة:
-//  1. كل شيء typed — TypeScript بيعرف شكل البيانات
-//  2. as const — بيخلي البيانات readonly (مش ممكن تتغير بالغلط)
-//  3. export مباشر — سهل import في أي مكان
+//  المنيو والتقييمات بقوا جايين من الـ API (ريم)، فاتشالوا من هنا
 // ============================================================
 
 import type {
   RestaurantData,
-  MenuItem,
   TeamMember,
   TimelineItem,
-  Review,
   SocialLink,
 } from '@/types'
-
-// ─────────────────────────────────────────────────────────────
-//  MENU ITEMS
-// ─────────────────────────────────────────────────────────────
-
-export const menuItems: MenuItem[] = [
-  // ── STARTERS ──
-  {
-    id: 'item_001',
-    name: 'Truffle Arancini',
-    description: 'Crispy saffron risotto balls filled with black truffle and aged Parmesan, served with aioli.',
-    price: 18,
-    category: 'starters',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=600&auto=format&fit=crop',
-    tags: ['vegetarian', 'signature'],
-    featured: true,
-  },
-  {
-    id: 'item_002',
-    name: 'Seared Scallops',
-    description: 'Pan-seared sea scallops on cauliflower purée with crispy capers and micro herbs.',
-    price: 24,
-    category: 'starters',
-    image: 'https://images.unsplash.com/photo-1519984388953-d2406bc725e1?q=80&w=600&auto=format&fit=crop',
-    tags: ['seafood', 'signature'],
-    featured: true,
-  },
-  {
-    id: 'item_003',
-    name: 'Burrata & Heritage Tomato',
-    description: 'Creamy burrata with heirloom tomatoes, basil oil, and aged balsamic.',
-    price: 16,
-    category: 'starters',
-    image: 'https://images.unsplash.com/photo-1559847844-5315695dadae?q=80&w=600&auto=format&fit=crop',
-    tags: ['vegetarian'],
-  },
-  {
-    id: 'item_004',
-    name: 'Foie Gras Torchon',
-    description: 'Silky duck foie gras with brioche toast, fig compote, and sea salt flakes.',
-    price: 32,
-    category: 'starters',
-    image: 'https://images.unsplash.com/photo-1482012792084-a0c3725f289f?q=80&w=600&auto=format&fit=crop',
-    tags: ['chef\'s pick'],
-  },
-
-  // ── MAINS ──
-  {
-    id: 'item_005',
-    name: 'Wagyu Beef Tenderloin',
-    description: 'A5 Wagyu tenderloin with bone marrow butter, truffle jus, and pomme purée.',
-    price: 89,
-    category: 'mains',
-    image: 'https://images.unsplash.com/photo-1558030006-450675393462?q=80&w=600&auto=format&fit=crop',
-    tags: ['signature', 'chef\'s pick'],
-    featured: true,
-  },
-  {
-    id: 'item_006',
-    name: 'Pan-Roasted Sea Bass',
-    description: 'Wild-caught sea bass on saffron bouillabaisse with fennel and rouille.',
-    price: 52,
-    category: 'mains',
-    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?q=80&w=600&auto=format&fit=crop',
-    tags: ['seafood'],
-    featured: true,
-  },
-  {
-    id: 'item_007',
-    name: 'Duck Confit',
-    description: 'Slow-cooked duck leg with cherry gastrique, lentils du Puy, and roasted garlic.',
-    price: 44,
-    category: 'mains',
-    image: 'https://images.unsplash.com/photo-1432139555190-58524dae6a55?q=80&w=600&auto=format&fit=crop',
-    tags: [],
-  },
-  {
-    id: 'item_008',
-    name: 'Wild Mushroom Risotto',
-    description: 'Carnaroli rice with porcini, chanterelle, and truffle oil, finished with 36-month Parmesan.',
-    price: 36,
-    category: 'mains',
-    image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=600&auto=format&fit=crop',
-    tags: ['vegetarian'],
-  },
-
-  // ── DESSERTS ──
-  {
-    id: 'item_009',
-    name: 'Valrhona Chocolate Sphere',
-    description: 'Dark chocolate sphere melted tableside with warm caramel, cocoa soil, and gold leaf.',
-    price: 19,
-    category: 'desserts',
-    image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=600&auto=format&fit=crop',
-    tags: ['signature'],
-    featured: true,
-  },
-  {
-    id: 'item_010',
-    name: 'Seasonal Soufflé',
-    description: 'Light-as-air soufflé with Tahitian vanilla bean and crème anglaise (20-min prep).',
-    price: 17,
-    category: 'desserts',
-    image: 'https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?q=80&w=600&auto=format&fit=crop',
-    tags: ['vegetarian'],
-  },
-  {
-    id: 'item_011',
-    name: 'Mille-Feuille',
-    description: 'Caramelized puff pastry with vanilla diplomat cream and raspberry coulis.',
-    price: 15,
-    category: 'desserts',
-    image: 'https://images.unsplash.com/photo-1464195244916-405fa0a82545?q=80&w=600&auto=format&fit=crop',
-    tags: ['vegetarian'],
-  },
-
-  // ── DRINKS ──
-  {
-    id: 'item_012',
-    name: 'Golden Signature Cocktail',
-    description: 'House blend of aged bourbon, elderflower, fresh lemon, and 24k gold flakes.',
-    price: 22,
-    category: 'drinks',
-    image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=600&auto=format&fit=crop',
-    tags: ['signature', 'alcoholic'],
-    sizes: [
-      { label: 'Single', price: 22 },
-      { label: 'Double', price: 38 },
-    ],
-  },
-  {
-    id: 'item_013',
-    name: 'Vintage Reserve Wine',
-    description: 'Curated selection from our award-winning cellar. Ask your sommelier for recommendations.',
-    price: 18,
-    category: 'drinks',
-    image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=600&auto=format&fit=crop',
-    tags: ['alcoholic'],
-    sizes: [
-      { label: 'Glass', price: 18 },
-      { label: 'Bottle', price: 95 },
-    ],
-  },
-  {
-    id: 'item_014',
-    name: 'Artisan Cold Brew',
-    description: 'Single-origin Ethiopian cold brew, slow-steeped 24 hours with notes of jasmine and citrus.',
-    price: 9,
-    category: 'drinks',
-    image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=600&auto=format&fit=crop',
-    tags: ['non-alcoholic'],
-  },
-]
 
 // ─────────────────────────────────────────────────────────────
 //  TEAM
@@ -231,37 +69,6 @@ export const timeline: TimelineItem[] = [
 ]
 
 // ─────────────────────────────────────────────────────────────
-//  REVIEWS
-// ─────────────────────────────────────────────────────────────
-
-export const defaultReviews: Review[] = [
-  {
-    id: 'rev_001',
-    name: 'Sophia L.',
-    rating: 5,
-    text: 'An extraordinary experience. The Wagyu was the finest I\'ve ever tasted, and the service was impeccable.',
-    status: 'approved',
-    createdAt: '2025-11-15T19:30:00Z',
-  },
-  {
-    id: 'rev_002',
-    name: 'Marcus T.',
-    rating: 5,
-    text: 'The chocolate sphere dessert is pure theatre. We celebrated our anniversary and felt truly special.',
-    status: 'approved',
-    createdAt: '2025-12-02T20:15:00Z',
-  },
-  {
-    id: 'rev_003',
-    name: 'Yuki N.',
-    rating: 4,
-    text: 'Beautifully crafted dishes with incredible attention to detail. The sommelier\'s pairing was inspired.',
-    status: 'approved',
-    createdAt: '2026-01-08T18:45:00Z',
-  },
-]
-
-// ─────────────────────────────────────────────────────────────
 //  SOCIAL LINKS
 // ─────────────────────────────────────────────────────────────
 
@@ -273,7 +80,6 @@ export const socialLinks: SocialLink[] = [
 
 // ─────────────────────────────────────────────────────────────
 //  FULL RESTAURANT DATA OBJECT
-//  ده الـ object الرئيسي اللي بيجمع كل حاجة
 // ─────────────────────────────────────────────────────────────
 
 export const restaurantData: RestaurantData = {
@@ -296,6 +102,7 @@ export const restaurantData: RestaurantData = {
     ctaText: 'Explore the Menu',
   },
 
+  // TODO: بيانات وهمية، غيّرها بالحقيقية قبل أي عرض
   contact: {
     address: '123 Golden Avenue, Luxury District, New York, NY 10001',
     phone: '+1 (212) 555-0199',
@@ -310,12 +117,10 @@ export const restaurantData: RestaurantData = {
   socials: socialLinks,
   team: teamMembers,
   timeline,
-  menuItems,
-  reviews: defaultReviews,
 
   stats: {
     years: 7,
-    guests: 50,     // 50K
+    guests: 50, // 50K
     awards: 12,
     satisfaction: 98,
   },

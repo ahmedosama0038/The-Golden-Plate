@@ -1,7 +1,6 @@
 'use client'
 
-
-import { useAnimate } from '@/hooks/useAnimate'
+import { useAnimate }  from '@/hooks/useAnimate'
 import InfoCards       from '@/components/contact/InfoCards'
 import ReservationForm from '@/components/contact/ReservationForm'
 import MapSection      from '@/components/contact/MapSection'
@@ -15,8 +14,8 @@ export default function ContactClient() {
       {/* Hero */}
       <section className="hero hero-sm">
         <div className="hero-content">
-          <h1>Get in <span>Touch</span></h1>
-          <p>Reserve a table, ask a question, or simply say hello — we&apos;d love to hear from you.</p>
+          <h1>Reserve a <span>Table</span></h1>
+          <p>Book your table in a few clicks, or message us on WhatsApp for anything else.</p>
         </div>
       </section>
 

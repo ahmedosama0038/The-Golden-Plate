@@ -901,3 +901,36 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
 .co-field textarea:focus { border-color: var(--gold, #d4af37); }
 .co-field textarea { resize: vertical; }
 .adm-table-wrap { overflow-x: auto; }
+.wa-float {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 900;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.9rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s;
+}
+.wa-float:hover {
+  transform: scale(1.08);
+}
+.adm-topbar-text {
+  min-width: 0;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .adm-topbar-title {
+    font-size: 1.2rem;
+  }
+  .adm-topbar-subtitle {
+    font-size: 0.8rem;
+  }
+}

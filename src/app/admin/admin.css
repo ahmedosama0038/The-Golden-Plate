@@ -1292,3 +1292,55 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 }
 .adm-status-v2.preparing { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 .adm-status-v2.delivered { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+
+/* ============================================================
+   Admin mobile fixes
+   ============================================================ */
+@media (max-width: 991px) {
+
+  /* مفيش padding مزدوج: الـ content هو اللي عليه الـ padding بس */
+  .adm-main { padding: 0 !important; }
+  .adm-content,
+  .adm-content-padding { padding: 1rem !important; }
+
+  /* TopBar: يبقى عادي مش sticky عشان ما يتداخلش مع هيدر الموبايل */
+  .adm-topbar {
+    position: static;
+    height: auto;
+    min-height: 56px;
+    padding: 0.9rem 1rem;
+    gap: 0.75rem;
+  }
+  .adm-topbar-text { min-width: 0; flex: 1; }
+  .adm-topbar-title { font-size: 1.15rem; line-height: 1.3; }
+  .adm-topbar-subtitle {
+    font-size: 0.75rem;
+    color: var(--adm-muted);
+    margin-top: 0.2rem;
+    line-height: 1.4;
+  }
+
+  /* الجداول: تتحرك أفقياً بدل ما تتقص */
+  .adm-table-wrap,
+  .adm-table-wrap-v2 {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .adm-table-wrap table,
+  .adm-table,
+  .adm-table-v2 { min-width: 640px; }
+
+  .adm-table th,
+  .adm-table td { padding: 0.75rem 0.6rem !important; }
+
+  /* Toolbar بتاع المنيو */
+  .adm-toolbar { gap: 0.75rem; margin-bottom: 1.2rem; }
+  .adm-search-wrap { min-width: 0; flex: 1 1 100%; }
+  .adm-btn-tab { padding: 0.5rem 0.9rem; font-size: 0.8rem; }
+
+  /* صورة المنتج أصغر */
+  .adm-img-container { width: 44px; height: 44px; }
+
+  /* هيدر الجدول */
+  .adm-table-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.9rem 1rem; }
+}

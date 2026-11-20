@@ -3,6 +3,7 @@
 import { useState }                    from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { productApi }                  from '@/lib/api'
+import { compressImage }               from '@/lib/compressImage'
 import type { Category }               from '@/types'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const SIZE_NAMES = ['small', 'medium', 'large'] as const
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024 // حد ريم: 2048KB
 
 export default function AddProductModal({ categories, onClose, editItem }: Props) {
   const queryClient = useQueryClient()
@@ -37,13 +39,34 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
   })
 
   // الصورة: الجديدة (لو اخترت) أو القديمة للعرض بس
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [preview, setPreview]     = useState<string | null>(editItem?.image ?? null)
+  const [imageFile, setImageFile]     = useState<File | null>(null)
+  const [preview, setPreview]         = useState<string | null>(editItem?.image ?? null)
+  const [compressing, setCompressing] = useState(false)
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
-    setImageFile(file)
-    setPreview(file ? URL.createObjectURL(file) : (editItem?.image ?? null))
+
+    if (!file) {
+      setImageFile(null)
+      setPreview(editItem?.image ?? null)
+      return
+    }
+
+    setCompressing(true)
+    try {
+      const compressed = await compressImage(file)
+
+      if (compressed.size > MAX_IMAGE_BYTES) {
+        alert('الصورة كبيرة جداً حتى بعد التصغير. اختار صورة تانية.')
+        e.target.value = ''
+        return
+      }
+
+      setImageFile(compressed)
+      setPreview(URL.createObjectURL(compressed))
+    } finally {
+      setCompressing(false)
+    }
   }
 
   const mutation = useMutation({
@@ -173,6 +196,11 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
         <div className="adm-form-group">
           <label>Image {isEdit ? '(سيبها فاضية لو مش عايز تغيرها)' : '(optional)'}</label>
           <input type="file" accept="image/*" onChange={handleImage} />
+          {compressing && (
+            <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--adm-muted)' }}>
+              <i className="fa-solid fa-spinner fa-spin" /> جاري تصغير الصورة...
+            </p>
+          )}
           {preview && (
             <img
               src={preview}
@@ -186,7 +214,7 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
           <button
             className="adm-btn primary"
             style={{ flex: 1, justifyContent: 'center', padding: '0.85rem' }}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || compressing}
             onClick={handleSubmit}
           >
             {mutation.isPending

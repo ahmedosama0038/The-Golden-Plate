@@ -150,8 +150,8 @@ export interface RestaurantData {
   socials: SocialLink[]
   team: TeamMember[]
   timeline: TimelineItem[]
-  menuItems: MenuItem[]
-  reviews: Review[]
+ menuItems?: MenuItem[]
+reviews?: Review[]
   stats: {
     years: number
     guests: number   // بالـ K (e.g. 50 = 50K)

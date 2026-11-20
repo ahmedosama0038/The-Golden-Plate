@@ -20,7 +20,7 @@ const NAV_LINKS = [
   { href: '/',        label: 'Home'    },
   { href: '/menu',    label: 'Menu'    },
   { href: '/about',   label: 'Story'   },
-  { href: '/contact', label: 'Contact' },
+  { href: '/reservation', label: 'Reservation' },
 ]
 
 export default function Navbar() {

@@ -1,6 +1,6 @@
 // ============================================================
 //  ConditionalLayout.tsx
-//  بيحدد لو الصفحة الحالية تاخد Navbar + Footer + Cart أو لأ
+//  بيحدد لو الصفحة الحالية تاخد Navbar + Footer + Cart + واتساب أو لأ
 //
 //  ليه محتاجينه؟
 //  صفحات الـ Admin ملهاش Navbar ولا Footer عادي
@@ -12,6 +12,7 @@ import { usePathname } from 'next/navigation'
 import Navbar from './Navbar'
 import Footer from './Footer'
 import CartSidebar from './CartSidebar'
+import WhatsAppButton from './WhatsAppButton'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -32,6 +33,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
         {children}
       </main>
       <Footer />
+      <WhatsAppButton />
     </>
   )
 }
