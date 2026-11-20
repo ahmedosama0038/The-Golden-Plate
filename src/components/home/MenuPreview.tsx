@@ -9,18 +9,39 @@ import { productApi } from '@/lib/api'
 import type { MenuItem } from '@/types'
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=60'
+const CURRENCY = 'ج.م'
+
+// بيطلع كل أسعار الأحجام سواء array أو object
+function getSizePrices(sizes: any): number[] {
+  if (!sizes) return []
+  const list = Array.isArray(sizes) ? sizes : Object.values(sizes)
+  return list
+    .map((s: any) => Number(typeof s === 'object' && s !== null ? s.price : s))
+    .filter((n) => Number.isFinite(n) && n > 0)
+}
+
+// بيرجّع { label, hasSizes }
+function getPriceInfo(item: any) {
+  const sizePrices = getSizePrices(item.sizes)
+  const base = Number(item.base_price ?? item.price ?? 0)
+
+  if (sizePrices.length > 0) {
+    const min = Math.min(...sizePrices)
+    const label = sizePrices.length > 1 ? `من ${min} ${CURRENCY}` : `${min} ${CURRENCY}`
+    return { label, hasSizes: true, price: min }
+  }
+  return { label: `${base} ${CURRENCY}`, hasSizes: false, price: base }
+}
 
 export default function MenuPreview() {
   const { addToCart } = useCart()
   const [localImages, setLocalImages] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    try {
       const saved = localStorage.getItem('restaurant_photos') || localStorage.getItem('admin_menu_images')
-      if (saved) {
-        setLocalImages(JSON.parse(saved))
-      }
-    }
+      if (saved) setLocalImages(JSON.parse(saved))
+    } catch {}
   }, [])
 
   const { data: products = [], isLoading, isError } = useQuery<any[]>({
@@ -41,7 +62,6 @@ export default function MenuPreview() {
         <p>Each dish tells a story of tradition, innovation, and uncompromising quality.</p>
       </div>
 
-      {/* Loading */}
       {isLoading && (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
           <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }} />
@@ -49,7 +69,6 @@ export default function MenuPreview() {
         </div>
       )}
 
-      {/* Error */}
       {isError && (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
           <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }} />
@@ -57,7 +76,6 @@ export default function MenuPreview() {
         </div>
       )}
 
-      {/* Products */}
       {!isLoading && !isError && (
         <div className="preview-grid" id="previewGrid">
           {featured.length === 0 ? (
@@ -66,26 +84,14 @@ export default function MenuPreview() {
             </div>
           ) : (
             featured.map((item) => {
-              const id          = String(item.id || item.Id || Math.random())
-              const name        = item.name        || item.Name        || 'Delicious Dish'
-              const description = item.description || item.Description || 'No description available.'
-              const price       = Number(item.price || item.Price || item.priceList?.[0]?.price || 0)
+              const id          = String(item.id)
+              const name        = item.name        || 'Delicious Dish'
+              const description = item.description || 'No description available.'
+              const { label, hasSizes, price } = getPriceInfo(item)
 
-              const rawImage    = item.itemImage || item.imageUrl || item.image || item.Image
-              const backendSrc  = typeof rawImage === 'string' && rawImage.length > 0 ? rawImage : ''
-              const itemImage   = localImages[String(item.id)] || localImages[item.name] || backendSrc || FALLBACK_IMAGE
-
-              // normalized MenuItem عشان useCart يفهمه
-              const normalizedItem: MenuItem = {
-                id,
-                name,
-                description,
-                price,
-                category:  item.category || item.categoryName || 'mains',
-                image:     itemImage,
-                itemImage: backendSrc || itemImage,
-                available: true,
-              }
+              const rawImage   = item.image_url || item.image || item.itemImage || item.imageUrl
+              const backendSrc = typeof rawImage === 'string' && rawImage.length > 0 ? rawImage : ''
+              const itemImage  = localImages[id] || localImages[name] || backendSrc || FALLBACK_IMAGE
 
               return (
                 <div key={id} className="menu-card animate">
@@ -106,11 +112,21 @@ export default function MenuPreview() {
                     <h3>{name}</h3>
                     <p style={{ minHeight: '42px' }}>{description}</p>
                     <div className="menu-card-footer">
-                      <span className="item-price">${price.toFixed(2)}</span>
-                      {/* ✅ بنبعت MenuItem كامل لـ addToCart */}
-                      <button className="add-btn" onClick={() => addToCart(normalizedItem)}>
-                        <span>Add to Order</span>
-                      </button>
+                      <span className="item-price">{label}</span>
+
+                      {/* الصنف اللي له أحجام لازم يختار حجم، فنوديه للمنيو */}
+                      {hasSizes ? (
+                        <Link href="/menu" className="add-btn">
+                          <span>Choose Size</span>
+                        </Link>
+                      ) : (
+                        <button
+                          className="add-btn"
+                          onClick={() => addToCart({ ...item, id, name, description, price } as unknown as MenuItem)}
+                        >
+                          <span>Add to Order</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

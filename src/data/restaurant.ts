@@ -105,9 +105,9 @@ export const restaurantData: RestaurantData = {
   // TODO: بيانات وهمية، غيّرها بالحقيقية قبل أي عرض
   contact: {
     address: '123 Golden Avenue, Luxury District, New York, NY 10001',
-    phone: '+1 (212) 555-0199',
+    phone: '01021245010',
     email: 'reservations@goldenplate.com',
-    whatsapp: '12125550199',
+    whatsapp: '01021245010',
     mapEmbedUrl:
       'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976397304603!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1734567890123',
     hoursWeekday: 'Mon–Fri: 12:00 PM – 11:00 PM',

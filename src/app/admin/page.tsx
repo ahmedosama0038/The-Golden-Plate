@@ -87,14 +87,13 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          <div className="form-options">
-            <label className="checkbox-container">
-              <input type="checkbox" defaultChecked />
-              <span className="checkmark"></span>
-              Remember me
-            </label>
-            <a href="#" className="forgot-pass">Forgot Password?</a>
-          </div>
+        <div className="form-options">
+  <label className="checkbox-container">
+    <input type="checkbox" defaultChecked />
+    <span className="checkmark"></span>
+    Remember me
+  </label>
+</div>
 
           <button type="submit" className="btn-login" disabled={isSubmitting}>
             {isSubmitting ? (
