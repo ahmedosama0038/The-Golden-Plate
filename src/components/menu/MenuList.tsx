@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useLang, type DictKey } from "@/lib/i18n";
 
-// الشكل اللي الكومبوننت محتاجه فقط (كله اختياري ما عدا id واسم وسعر)
 export interface MenuListItem {
   id: string | number;
   name: string;
@@ -22,14 +22,14 @@ interface Props<T extends MenuListItem> {
 const FALLBACK_IMG =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop";
 
-const CURRENCY = "ج.م";
-
-// ── السعر في مكان واحد ──
-function getPriceLabel(item: MenuListItem) {
+// ── السعر في مكان واحد: أقل سعر لو فيه أحجام ──
+function getPriceLabel(item: MenuListItem, t: (k: DictKey) => string) {
+  const currency = t("currency");
   if (item.sizes && item.sizes.length > 0) {
-    return `From ${item.sizes[0].price} ${CURRENCY}`;
+    const min = Math.min(...item.sizes.map((s) => s.price));
+    return `${t("menu.from")} ${min} ${currency}`;
   }
-  return `${item.price ?? 0} ${CURRENCY}`;
+  return `${item.price ?? 0} ${currency}`;
 }
 
 // ── الصورة: شيمر وقت التحميل + fallback مرة واحدة ──
@@ -45,7 +45,6 @@ function DishImage({ src, alt }: { src: string; alt: string }) {
         loading="lazy"
         onLoad={() => setLoaded(true)}
         onError={() => {
-          // الشرط بيمنع اللوب لو الاحتياطية نفسها فشلت
           if (currentSrc !== FALLBACK_IMG) setCurrentSrc(FALLBACK_IMG);
         }}
       />
@@ -61,19 +60,19 @@ function MenuRow<T extends MenuListItem>({
   item: T;
   onAdd: (item: T) => void;
 }) {
+  const { t } = useLang();
   const src = item.imageUrl || item.image || FALLBACK_IMG;
   const hasSizes = !!item.sizes && item.sizes.length > 0;
 
   return (
     <div className="menu-row">
       <div className="menu-row-img">
-        {/* key={src} عشان لو الصورة اتغيرت الحالة تترست */}
         <DishImage key={src} src={src} alt={item.name} />
       </div>
 
       <div className="menu-row-info">
         <h3>{item.name}</h3>
-        <p>{item.description || "No description available."}</p>
+        <p>{item.description || t("menu.noDescription")}</p>
 
         {item.tags && item.tags.length > 0 && (
           <div
@@ -94,14 +93,14 @@ function MenuRow<T extends MenuListItem>({
       </div>
 
       <div className="menu-row-action">
-        <span className="row-price">{getPriceLabel(item)}</span>
+        <span className="row-price">{getPriceLabel(item, t)}</span>
         <button
           type="button"
           className="row-add-btn"
           onClick={() => onAdd(item)}
-          aria-label={`${hasSizes ? "Select size for" : "Add to order"}: ${item.name}`}
+          aria-label={`${hasSizes ? t("menu.sizeAria") : t("menu.addAria")} ${item.name}`}
         >
-          {hasSizes ? "Select Size" : "Add to Order"}
+          {hasSizes ? t("menu.chooseSize") : t("menu.addToOrder")}
         </button>
       </div>
     </div>
@@ -113,11 +112,13 @@ export default function MenuList<T extends MenuListItem>({
   items,
   onAdd,
 }: Props<T>) {
+  const { t } = useLang();
+
   if (!items || items.length === 0) {
     return (
       <div className="no-results">
         <i className="fa-solid fa-magnifying-glass" />
-        <p>No dishes found.</p>
+        <p>{t("menu.noResults")}</p>
       </div>
     );
   }

@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useCart } from '@/hooks/useCart'
+import { useLang } from '@/lib/i18n'
 import CheckoutModal from './CheckoutModal'
 import { CheckoutFormData } from '@/lib/schemas'
 import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { toast } from '@/lib/toast'
 
-const CURRENCY = 'ج.م'
 const WA_NUMBER = '201021245010'
 
 export default function CartSidebar() {
@@ -17,11 +17,11 @@ export default function CartSidebar() {
     removeFromCart, changeQuantity,
     buildWhatsAppMessage, buildExtrasNote, emptyCart,
   } = useCart()
+  const { t } = useLang()
+  const currency = t('currency')
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
 
-  // ── تحويل بيانات الفورم + الكارت لشكل ريم ──
   const buildPayload = (data: CheckoutFormData): CreateOrderPayload => {
-    // الباك لسه مفيهوش إضافات، فبنكتبها في notes
     const extrasNote = buildExtrasNote()
     const notes = [
       data.notes?.trim(),
@@ -46,7 +46,6 @@ export default function CartSidebar() {
       return { ...base, address: data.address?.trim() }
     }
 
-    // الفورم بيطلّع HH:mm والباك عايز HH:mm:ss
     const time = data.timeOnly ?? ''
     return {
       ...base,
@@ -57,8 +56,7 @@ export default function CartSidebar() {
   }
 
   const finishOrder = (data: CheckoutFormData) => {
-    // لازم نبني رابط الواتساب قبل ما نفضّي الكارت
-    const whatsappUrl = buildWhatsAppMessage(WA_NUMBER, CURRENCY, data)
+    const whatsappUrl = buildWhatsAppMessage(WA_NUMBER, currency, data)
     window.open(whatsappUrl, '_blank')
     emptyCart()
     setIsCheckoutModalOpen(false)
@@ -68,22 +66,18 @@ export default function CartSidebar() {
   const orderMutation = useMutation({
     mutationFn: (data: CheckoutFormData) => orderApi.create(buildPayload(data)),
 
-    // نجح: الطلب في الأدمن، ونفتح واتساب للمطعم
     onSuccess: (_res, data) => {
       toast.success(
         data.order_type === 'delivery'
-          ? 'تم تسجيل الطلب بنجاح'
-          : 'تم تسجيل الحجز بنجاح'
+          ? t('cart.toast.orderOk')
+          : t('cart.toast.reservationOk')
       )
       finishOrder(data)
     },
 
-    // فشل: نعرض سبب ريم، ونفتح واتساب عشان الطلب ما يضيعش
     onError: (error: any, data) => {
       console.error('Order failed, falling back to WhatsApp:', error?.response?.data ?? error)
-      toast.error(
-        error?.response?.data?.message ?? 'تعذر تسجيل الطلب، هنكمل على واتساب'
-      )
+      toast.error(error?.response?.data?.message ?? t('cart.toast.failed'))
       finishOrder(data)
     },
   })
@@ -110,7 +104,7 @@ export default function CartSidebar() {
       <aside className={`cart-panel${isOpen ? ' open' : ''}`} id="cartPanel">
 
         <div className="cart-header">
-          <h2><i className="fa-solid fa-bag-shopping" /> Your Selection</h2>
+          <h2><i className="fa-solid fa-bag-shopping" /> {t('cart.title')}</h2>
           <button className="icon-btn close-cart" onClick={close}>
             <i className="fa-solid fa-xmark" />
           </button>
@@ -118,7 +112,7 @@ export default function CartSidebar() {
 
         <div className="cart-body" id="cartBody">
           {items.length === 0 ? (
-            <p className="cart-empty">Your selection is empty.</p>
+            <p className="cart-empty">{t('cart.empty')}</p>
           ) : (
             items.map((item) => (
               <div key={item.id} className="cart-item">
@@ -133,7 +127,7 @@ export default function CartSidebar() {
                     )}
                   </div>
                   <div className="cart-item-price">
-                    {item.price.toFixed(2)} {CURRENCY} each
+                    {item.price.toFixed(2)} {currency} {t('cart.each')}
                   </div>
                 </div>
 
@@ -152,8 +146,8 @@ export default function CartSidebar() {
 
         <div className="cart-footer">
           <div className="cart-total">
-            <span>Total</span>
-            <span id="cartTotal">{total.toFixed(2)} {CURRENCY}</span>
+            <span>{t('cart.total')}</span>
+            <span id="cartTotal">{total.toFixed(2)} {currency}</span>
           </div>
 
           <button
@@ -166,7 +160,7 @@ export default function CartSidebar() {
               opacity: disabled ? 0.5 : 1,
             }}
           >
-            {orderMutation.isPending ? 'Placing order...' : 'Place Order'}
+            {orderMutation.isPending ? t('cart.placing') : t('cart.placeOrder')}
           </button>
         </div>
 

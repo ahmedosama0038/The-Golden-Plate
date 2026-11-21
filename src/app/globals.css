@@ -1,17 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
-/* ===== CSS VARIABLES (Design Tokens) =====
-   نفس المتغيرات بالظبط من style.css الأصلي
-   بنستخدمهم في كل مكان عشان لو عايز تغير لون مثلاً
-   تغيره هنا بس وكل الـ app بتتغير
-================================================ */
+/* ===== CSS VARIABLES (Design Tokens) ===== */
 :root {
   --bg-dark:    #050505;
   --surface:    #0c0c0c;
   --card-bg:    #111111;
-  --gold:        #D4AF37  ;
-  --gold-light: #E5C158  ;
-  --gold-dark:  #B89428  ;
+  --gold:       #D4AF37;
+  --gold-light: #E5C158;
+  --gold-dark:  #B89428;
   --text:       #F0F0F0;
   --text-muted: #777777;
   --border:     #1a1a1a;
@@ -21,9 +17,9 @@
   --radius:     16px;
   --nav-height: 72px;
   --tr:         0.42s cubic-bezier(0.22,1,0.36,1);
-  --btn-bg:     #D4AF37 ;
+  --btn-bg:     #D4AF37;
   --btn-text:   #000000;
-  --btn-hover:    #F0F0F0 ;
+  --btn-hover:  #F0F0F0;
   --input-bg:   #111111;
   --nav-link:   #888888;
   --card-border:#1a1a1a;
@@ -31,8 +27,6 @@
   --badge-text: #ccc;
   --gold-glow:  rgba(255,255,255,0.05);
 }
-
-
 
 /* ===== RESET ===== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,11 +41,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ===== BACKGROUND IMAGE + OVERLAY =====
-   body::before = الصورة الخلفية (fixed)
-   body::after  = الطبقة الداكنة فوقها
-   z-index: -2 و -1 عشان يبقوا وراء كل حاجة
-================================================ */
+/* ===== BACKGROUND IMAGE + OVERLAY ===== */
 body::before {
   content: "";
   position: fixed; inset: 0;
@@ -108,7 +98,7 @@ img { display: block; }
 }
 .nav-logo::after {
   content: '';
-  position: absolute; bottom: -2px; left: 0;
+  position: absolute; bottom: -2px; inset-inline-start: 0;
   width: 0; height: 1px;
   background: var(--btn-hover);
   transition: width 0.4s ease;
@@ -175,7 +165,7 @@ img { display: block; }
 .icon-btn i, .icon-btn span { position: relative; z-index: 2; }
 
 .cart-count {
-  position: absolute; top: -2px; right: -2px;
+  position: absolute; top: -2px; inset-inline-end: -2px;
   width: 17px; height: 17px;
   background: var(--gold); color: var(--btn-text);
   border-radius: 50%; font-size: 0.58rem; font-weight: 700;
@@ -368,7 +358,7 @@ img { display: block; }
   transition: all var(--tr); position: relative; overflow: hidden;
 }
 .menu-row::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  content: ''; position: absolute; inset-inline-start: 0; top: 0; bottom: 0;
   width: 0; background: var(--gold); transition: width var(--tr);
 }
 .menu-row:hover { transform: translateX(5px); border-color: rgba(255,255,255,0.1); box-shadow: var(--shadow-gold); }
@@ -476,7 +466,7 @@ img { display: block; }
 .size-tag {
   display: inline-block; font-size: 0.62rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.5px;
-  padding: 2px 6px; border-radius: 4px; margin-left: 5px;
+  padding: 2px 6px; border-radius: 4px; margin-inline-start: 5px;
   background: var(--badge-bg); color: var(--badge-text); vertical-align: middle;
 }
 .cart-item-price { font-size: 0.72rem; color: var(--text-muted); }
@@ -572,7 +562,7 @@ img { display: block; }
 .gal-item img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--tr), filter var(--tr); }
 .gal-item:hover img { transform: scale(1.07); filter: brightness(0.8); }
 
-/* ===== CONTACT PAGE ===== */
+/* ===== CONTACT / RESERVATION PAGE ===== */
 .contact-layout {
   display: grid; grid-template-columns: 1fr 1.4fr; gap: 3rem;
   max-width: 1200px; margin: 0 auto; padding: 0 clamp(1.5rem, 5vw, 3rem) 4rem;
@@ -616,7 +606,7 @@ img { display: block; }
 .submit-btn:hover { background: var(--gold-dark); transform: translateY(-2px); box-shadow: var(--shadow-gold); }
 
 /* ===== MENU PAGE LAYOUT ===== */
- .menu-layout {
+.menu-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
   gap: 2rem;
@@ -636,12 +626,12 @@ img { display: block; }
 .cat-btn {
   display: flex; align-items: center; gap: 0.75rem;
   padding: 0.75rem 1rem; border-radius: 10px;
-  background: transparent; border: 1px solid transparent; border-left: 2px solid transparent;
+  background: transparent; border: 1px solid transparent; border-inline-start: 2px solid transparent;
   color: var(--text-muted); font-size: 0.85rem; font-weight: 500;
-  transition: all var(--tr); text-align: left; width: 100%;
+  transition: all var(--tr); text-align: start; width: 100%;
 }
 .cat-btn:hover { background: var(--card-bg); color: var(--text); }
-.cat-btn.active { background: var(--card-bg); border-color: transparent; border-left-color: var(--gold); color: var(--gold); font-weight: 600; }
+.cat-btn.active { background: var(--card-bg); border-color: transparent; border-inline-start-color: var(--gold); color: var(--gold); font-weight: 600; }
 .cat-label { font-size: 0.72rem; }
 
 /* ===== FOOTER ===== */
@@ -677,8 +667,6 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(9px); }
 }
-/* كل element عنده class animate بيبدأ invisible */
-/* وبيتحرك لما الـ IntersectionObserver يشوفه */
 .animate { opacity: 0; transform: translateY(26px); transition: opacity 0.72s ease, transform 0.72s ease; }
 .animate.visible { opacity: 1; transform: translateY(0); }
 
@@ -691,22 +679,21 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
     flex-direction: row; overflow-x: auto; gap: 0.35rem;
     scrollbar-width: none; border-bottom: 1px solid var(--border);
     margin: 0 calc(-1 * clamp(1.5rem, 6vw, 4.5rem));
-    display: flex; /* 🆕 تأكيد إنه flex */
+    display: flex;
   }
-  .cat-btn { 
-    white-space: nowrap; 
-    flex: 0 0 auto; /* 🆕 مهم - يمنع الزرار من التمدد */
-    width: auto !important; /* 🆕 يمنع الزرار من ياخد عرض كامل */
-    text-align: center; 
-    padding: 0.55rem 1rem !important; 
-    border-left: none !important; 
-    border-bottom: 2px solid transparent !important; 
-    border-radius: 6px; 
-    font-size: 0.8rem; 
+  .cat-btn {
+    white-space: nowrap;
+    flex: 0 0 auto;
+    width: auto !important;
+    text-align: center;
+    padding: 0.55rem 1rem !important;
+    border-inline-start: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 6px;
+    font-size: 0.8rem;
   }
   .cat-nav > .cat-label { display: none; }
   .cat-btn .cat-label { display: inline; }
-  /* ... باقي الـ CSS زي ما هو */
 
   .contact-layout { grid-template-columns: 1fr; gap: 2rem; }
   .team-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
@@ -783,7 +770,9 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
   .menu-card:hover, .menu-row:hover, .feature-card:hover { transform: none; }
   .btn-primary:hover, .btn-outline:hover { transform: none; }
   .checkout-btn:hover, .icon-btn:hover, .socials a:hover { transform: none; }
-}/* ===== CHECKOUT MODAL ===== */
+}
+
+/* ===== CHECKOUT MODAL ===== */
 .checkout-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.8);
   z-index: 2100; display: flex; align-items: center; justify-content: center;
@@ -835,6 +824,7 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
 .animate-up { animation: fadeUp 0.3s ease; }
 .hero-sm { padding-bottom: 1.5rem; }
 .hero-sm p { margin-bottom: 0; }
+
 /* شيمر الصورة وقت التحميل */
 .dish-img-wrap {
   width: 100%;
@@ -862,6 +852,7 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
 /* اختيار نوع الطلب */
 .co-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; }
 .co-tab {
@@ -900,11 +891,13 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
 .co-field input:focus,
 .co-field textarea:focus { border-color: var(--gold, #d4af37); }
 .co-field textarea { resize: vertical; }
+
 .adm-table-wrap { overflow-x: auto; }
+
 .wa-float {
   position: fixed;
   bottom: 1.5rem;
-  right: 1.5rem;
+  inset-inline-end: 1.5rem;
   z-index: 900;
   width: 56px;
   height: 56px;
@@ -921,6 +914,7 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
 .wa-float:hover {
   transform: scale(1.08);
 }
+
 .adm-topbar-text {
   min-width: 0;
   flex: 1;
@@ -934,3 +928,47 @@ footer .copy { color: var(--text-muted); font-size: 0.77rem; letter-spacing: 0.3
     font-size: 0.8rem;
   }
 }
+
+/* ===== LANGUAGE TOGGLE ===== */
+.lang-toggle {
+  width: auto;
+  min-width: 2.4rem;
+  padding-inline: 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-cairo), sans-serif;
+}
+
+/* ===== RTL (Arabic) ===== */
+[dir='rtl'] body {
+  font-family: var(--font-cairo), 'Montserrat', sans-serif;
+}
+
+/* Playfair مبيدعمش عربي */
+[dir='rtl'] :is(h1, h2, h3, h4, .nav-logo, .stat-val, .tl-year,
+                .footer-logo, .team-name, .form-title, .nav-links a) {
+  font-family: var(--font-cairo), sans-serif;
+}
+
+/* letter-spacing بيفصل حروف العربي */
+[dir='rtl'] * { letter-spacing: 0 !important; }
+
+/* الإيتاليك مش مناسب للعربي */
+[dir='rtl'] .hero h1 span,
+[dir='rtl'] .review-text { font-style: normal; }
+
+/* حركة الـ hover على صف المنيو تتعكس */
+[dir='rtl'] .menu-row:hover { transform: translateX(-5px); }
+
+/* السلة تطلع من الشمال */
+[dir='rtl'] .cart-panel {
+  right: auto;
+  left: 0;
+  transform: translateX(-100%);
+  border-left: none;
+  border-right: 1px solid var(--border);
+  box-shadow: 14px 0 40px rgba(0, 0, 0, 0.55);
+}
+[dir='rtl'] .cart-panel.open { transform: translateX(0); }
+[dir='rtl'] .arrow-flip { transform: scaleX(-1); }

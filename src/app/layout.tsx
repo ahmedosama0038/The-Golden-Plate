@@ -1,13 +1,15 @@
-// ============================================================
-//  app/layout.tsx — الـ Root Layout
-//  بيلف كل الـ app — بيتحمّل مرة واحدة بس
-// ============================================================
-export const dynamic = "force-dynamic";
 import type { Metadata } from 'next'
+import { Cairo } from 'next/font/google'
 import './globals.css'
-// 💡 1. استيراد الـ Providers الشامل الجديد من الـ lib
-import { Providers } from '@/lib/providers' 
+import { Providers } from '@/lib/providers'
+import { LanguageProvider } from '@/lib/i18n'
 import ConditionalLayout from '@/components/layout/ConditionalLayout'
+
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  variable: '--font-cairo',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -19,22 +21,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr" className={cairo.variable} suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          />
+        />
       </head>
       <body>
-        {/*
-          💡 2. استبدلنا StoreProvider بـ Providers الجديد
-          كده الـ Redux والـ TanStack Query شغالين مع بعض في نفس الوقت وساندين التطبيق كله
-        */}
         <Providers>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
+          <LanguageProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </LanguageProvider>
         </Providers>
       </body>
     </html>

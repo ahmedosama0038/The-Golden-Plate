@@ -1,16 +1,10 @@
-
-// ============================================================
-//  app/contact/page.tsx — صفحة Contact
-//  Server Component — يجمع الـ components ويمتلك `metadata`
-// ============================================================
-
 import type { Metadata } from 'next'
 import ContactClient from '@/components/contact/ContactClient'
 
 export const metadata: Metadata = {
-  title: 'Contact',
+  title: 'Reservation',
 }
 
-export default function ContactPage() {
+export default function ReservationPage() {
   return <ContactClient />
 }

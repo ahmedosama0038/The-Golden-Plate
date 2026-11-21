@@ -1,5 +1,7 @@
+'use client'
 
 import { Category } from '@/types'
+import { useLang } from '@/lib/i18n'
 
 interface Props {
   categories: Category[]
@@ -18,11 +20,12 @@ const getIconClass = (name: string) => {
 }
 
 export default function CategoryNav({ categories, active, onSelect, isLoading }: Props) {
+  const { t } = useLang()
 
   if (isLoading) {
     return (
       <aside className="cat-nav">
-        <span className="cat-label">Loading...</span>
+        <span className="cat-label">{t('menu.loadingShort')}</span>
         <div className="cat-btn" style={{ opacity: 0.5 }}>
           <i className="fa-solid fa-spinner fa-spin" />
         </div>
@@ -32,14 +35,14 @@ export default function CategoryNav({ categories, active, onSelect, isLoading }:
 
   return (
     <aside className="cat-nav">
-      <span className="cat-label">Browse by</span>
+      <span className="cat-label">{t('menu.browseBy')}</span>
 
       <button
         className={`cat-btn${active === 'all' ? ' active' : ''}`}
         onClick={() => onSelect('all')}
       >
         <i className="fa-solid fa-grip" />
-        <span className="cat-label">All Selections</span>
+        <span className="cat-label">{t('menu.allSelections')}</span>
       </button>
 
       {categories.map((cat) => {

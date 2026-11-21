@@ -1,69 +1,40 @@
-// ============================================================
-//  FeaturesSection.tsx — نفس section "Why Choose Us" من index.html
-// ============================================================
-// Server Component
-// ============================================================
+'use client'
 
-const FEATURES = [
-  {
-    icon: 'fa-solid fa-award',
-    title: 'Award-Winning Cuisine',
-    desc: 'Recognized three times for culinary excellence, our dishes are crafted to impress even the most discerning palate.',
-    delay: '',
-  },
-  {
-    icon: 'fa-solid fa-seedling',
-    title: 'Farm-to-Table',
-    desc: 'We partner with local farms and artisanal suppliers to bring you the freshest, most sustainable ingredients every day.',
-    delay: '0.1s',
-  },
-  {
-    icon: 'fa-solid fa-champagne-glasses',
-    title: 'Curated Pairings',
-    desc: 'Our head sommelier personally selects wines and cocktails to complement every dish on our ever-evolving menu.',
-    delay: '0.2s',
-  },
-  {
-    icon: 'fa-solid fa-utensils',
-    title: 'Private Dining',
-    desc: 'Host intimate gatherings or celebrations in our exclusive private dining rooms, tailored to your vision.',
-    delay: '0.3s',
-  },
+import { useLang, type DictKey } from '@/lib/i18n'
+
+const FEATURES: { icon: string; title: DictKey; desc: DictKey; delay?: string }[] = [
+  { icon: 'fa-solid fa-award',            title: 'features.f1.title', desc: 'features.f1.desc' },
+  { icon: 'fa-solid fa-seedling',         title: 'features.f2.title', desc: 'features.f2.desc', delay: '0.1s' },
+  { icon: 'fa-solid fa-champagne-glasses', title: 'features.f3.title', desc: 'features.f3.desc', delay: '0.2s' },
+  { icon: 'fa-solid fa-utensils',         title: 'features.f4.title', desc: 'features.f4.desc', delay: '0.3s' },
 ]
 
 export default function FeaturesSection() {
-  return (
-    // .section + .section-bg من globals.css
-    <section className="section section-bg">
+  const { t } = useLang()
 
-      {/* .section-header */}
+  return (
+    <section className="section section-bg">
       <div className="section-header animate">
-        <span className="section-tag">Why Choose Us</span>
-        <h2>An Unrivalled Experience</h2>
-        {/* .divider-gold = الخط الذهبي تحت العنوان */}
+        <span className="section-tag">{t('features.tag')}</span>
+        <h2>{t('features.title')}</h2>
         <div className="divider-gold" />
       </div>
 
-      {/* .features-grid = repeat(auto-fit, minmax(230px, 1fr)) */}
       <div className="features-grid">
         {FEATURES.map(({ icon, title, desc, delay }) => (
-          // .feature-card + .animate
-          // style={{ transitionDelay }} = نفس style="transition-delay:0.1s" في HTML
           <div
             key={title}
             className="feature-card animate"
             style={delay ? { transitionDelay: delay } : undefined}
           >
-            {/* .feature-icon = الأيقونة في المربع */}
             <div className="feature-icon">
               <i className={icon} />
             </div>
-            <h3>{title}</h3>
-            <p>{desc}</p>
+            <h3>{t(title)}</h3>
+            <p>{t(desc)}</p>
           </div>
         ))}
       </div>
-
     </section>
   )
 }

@@ -5,13 +5,12 @@ import Link from 'next/link'
 import { useQuery }   from '@tanstack/react-query'
 import { useAnimate } from '@/hooks/useAnimate'
 import { useCart }    from '@/hooks/useCart'
+import { useLang, type DictKey } from '@/lib/i18n'
 import { productApi } from '@/lib/api'
 import type { MenuItem } from '@/types'
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=60'
-const CURRENCY = 'ج.م'
 
-// بيطلع كل أسعار الأحجام سواء array أو object
 function getSizePrices(sizes: any): number[] {
   if (!sizes) return []
   const list = Array.isArray(sizes) ? sizes : Object.values(sizes)
@@ -20,21 +19,24 @@ function getSizePrices(sizes: any): number[] {
     .filter((n) => Number.isFinite(n) && n > 0)
 }
 
-// بيرجّع { label, hasSizes }
-function getPriceInfo(item: any) {
+function getPriceInfo(item: any, t: (k: DictKey) => string) {
+  const currency = t('currency')
   const sizePrices = getSizePrices(item.sizes)
   const base = Number(item.base_price ?? item.price ?? 0)
 
   if (sizePrices.length > 0) {
     const min = Math.min(...sizePrices)
-    const label = sizePrices.length > 1 ? `من ${min} ${CURRENCY}` : `${min} ${CURRENCY}`
+    const label = sizePrices.length > 1
+      ? `${t('menu.from')} ${min} ${currency}`
+      : `${min} ${currency}`
     return { label, hasSizes: true, price: min }
   }
-  return { label: `${base} ${CURRENCY}`, hasSizes: false, price: base }
+  return { label: `${base} ${currency}`, hasSizes: false, price: base }
 }
 
 export default function MenuPreview() {
   const { addToCart } = useCart()
+  const { t } = useLang()
   const [localImages, setLocalImages] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -56,23 +58,23 @@ export default function MenuPreview() {
   return (
     <section className="section">
       <div className="section-header animate">
-        <span className="section-tag">Curated Selections</span>
-        <h2>A Taste of Our Menu</h2>
+        <span className="section-tag">{t('menu.tag')}</span>
+        <h2>{t('menu.title')}</h2>
         <div className="divider-gold" />
-        <p>Each dish tells a story of tradition, innovation, and uncompromising quality.</p>
+        <p>{t('menu.subtitle')}</p>
       </div>
 
       {isLoading && (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
           <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }} />
-          <p>Loading menu...</p>
+          <p>{t('menu.loading')}</p>
         </div>
       )}
 
       {isError && (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
           <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }} />
-          <p>Could not load menu items.</p>
+          <p>{t('menu.error')}</p>
         </div>
       )}
 
@@ -80,14 +82,14 @@ export default function MenuPreview() {
         <div className="preview-grid" id="previewGrid">
           {featured.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', gridColumn: '1/-1' }}>
-              <p>No menu items available yet.</p>
+              <p>{t('menu.empty')}</p>
             </div>
           ) : (
             featured.map((item) => {
               const id          = String(item.id)
-              const name        = item.name        || 'Delicious Dish'
-              const description = item.description || 'No description available.'
-              const { label, hasSizes, price } = getPriceInfo(item)
+              const name        = item.name        || t('menu.defaultName')
+              const description = item.description || t('menu.noDescription')
+              const { label, hasSizes, price } = getPriceInfo(item, t)
 
               const rawImage   = item.image_url || item.image || item.itemImage || item.imageUrl
               const backendSrc = typeof rawImage === 'string' && rawImage.length > 0 ? rawImage : ''
@@ -114,17 +116,16 @@ export default function MenuPreview() {
                     <div className="menu-card-footer">
                       <span className="item-price">{label}</span>
 
-                      {/* الصنف اللي له أحجام لازم يختار حجم، فنوديه للمنيو */}
                       {hasSizes ? (
                         <Link href="/menu" className="add-btn">
-                          <span>Choose Size</span>
+                          <span>{t('menu.chooseSize')}</span>
                         </Link>
                       ) : (
                         <button
                           className="add-btn"
                           onClick={() => addToCart({ ...item, id, name, description, price } as unknown as MenuItem)}
                         >
-                          <span>Add to Order</span>
+                          <span>{t('menu.addToOrder')}</span>
                         </button>
                       )}
                     </div>
@@ -138,7 +139,8 @@ export default function MenuPreview() {
 
       <div style={{ textAlign: 'center', marginTop: '3rem' }}>
         <Link href="/menu" className="btn-outline animate">
-          View Full Menu <i className="fa-solid fa-arrow-right" style={{ marginLeft: '0.4rem' }} />
+          {t('menu.viewAll')}{' '}
+          <i className="fa-solid fa-arrow-right arrow-flip" style={{ marginInlineStart: '0.4rem' }} />
         </Link>
       </div>
     </section>

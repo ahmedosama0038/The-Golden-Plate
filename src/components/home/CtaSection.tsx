@@ -1,14 +1,19 @@
+'use client'
+
 import Link from 'next/link'
+import { useLang } from '@/lib/i18n'
 
 export default function CtaSection() {
+  const { t } = useLang()
+
   return (
     <section className="cta-section">
       <div className="cta-box animate">
-        <h2>Ready to Taste the Journey?</h2>
-        <p>Step into our world. Reserve a table, explore our seasonal menu, or simply experience the art of dining reimagined.</p>
+        <h2>{t('cta.title')}</h2>
+        <p>{t('cta.desc')}</p>
         <div className="cta-btns">
-          <Link href="/menu" className="btn-primary">Explore the Menu</Link>
-          <Link href="/contact" className="btn-outline">Make a Reservation</Link>
+          <Link href="/menu" className="btn-primary">{t('hero.cta')}</Link>
+          <Link href="/reservation" className="btn-outline">{t('cta.reserve')}</Link>
         </div>
       </div>
     </section>

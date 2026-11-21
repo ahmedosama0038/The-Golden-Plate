@@ -23,7 +23,7 @@
 
 /* ── Reset للأدمن ── */
 .adm-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
-
+.adm-wrap { direction: ltr; }
 /* ── Layout الرئيسي ── */
 .adm-wrap {
   display: flex;

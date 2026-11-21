@@ -1,52 +1,40 @@
-// ============================================================
-//  HeroSection.tsx — نفس section.hero من index.html
-// ============================================================
-// Server Component — محتاجش browser
-// الـ hero-content بيتحرك بـ CSS animation مش JS
-// ============================================================
+'use client'
 
 import Link from 'next/link'
+import { useLang, type DictKey } from '@/lib/i18n'
 
-const BADGES = [
-  { icon: 'fa-solid fa-star',        text: '3× Culinary Award Winner'   },
-  { icon: 'fa-solid fa-leaf',        text: 'Locally Sourced Ingredients' },
-  { icon: 'fa-solid fa-wine-glass',  text: 'Curated Wine Selection'      },
+const BADGES: { icon: string; key: DictKey }[] = [
+  { icon: 'fa-solid fa-star',       key: 'hero.badge1' },
+  { icon: 'fa-solid fa-leaf',       key: 'hero.badge2' },
+  { icon: 'fa-solid fa-wine-glass', key: 'hero.badge3' },
 ]
 
 export default function HeroSection() {
+  const { t } = useLang()
+
   return (
-    // .hero من globals.css = min-height: 90vh + flex center
     <section className="hero">
       <div className="hero-content">
 
-        {/* .hero-badges — الـ badges الصغيرة فوق العنوان */}
         <div className="hero-badges animate">
-          {BADGES.map(({ icon, text }) => (
-            <div key={text} className="hero-badge">
+          {BADGES.map(({ icon, key }) => (
+            <div key={key} className="hero-badge">
               <i className={icon} />
-              {text}
+              {t(key)}
             </div>
           ))}
         </div>
 
-        {/* .hero h1 — العنوان الرئيسي */}
-        {/* h1 span → color: var(--gold) + font-style: italic */}
         <h1>
-          Where <span>Flavor</span> Meets Elegance
+          {t('hero.title1')} <span>{t('hero.title2')}</span> {t('hero.title3')}
         </h1>
 
-        {/* .hero p */}
-        <p>
-          An exquisite culinary journey crafted with passion, precision,
-          and the finest ingredients. Taste the artistry in every bite.
-        </p>
+        <p>{t('hero.subtitle')}</p>
 
-        {/* .btn-primary */}
         <Link href="/menu" className="btn-primary">
-          Explore the Menu
+          {t('hero.cta')}
         </Link>
 
-        {/* السهم اللي بيتحرك لأسفل */}
         <div className="scroll-hint">
           <i className="fa-solid fa-chevron-down" />
         </div>

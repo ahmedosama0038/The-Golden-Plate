@@ -3,6 +3,7 @@
 import { useState }    from 'react'
 import { useQuery }    from '@tanstack/react-query'
 import { useAnimate }  from '@/hooks/useAnimate'
+import { useLang }     from '@/lib/i18n'
 import { reviewApi }   from '@/lib/api'
 import ReviewForm      from '@/components/reviews/ReviewForm'
 
@@ -16,12 +17,11 @@ function Stars({ rating }: { rating: number }) {
 
 export default function ReviewsSection() {
   useAnimate()
+  const { t } = useLang()
 
   const [success, setSuccess] = useState(false)
-  // تغيير الـ key بيعمل reset كامل للفورم بعد الإرسال
   const [formKey, setFormKey] = useState(0)
 
-  // ── جيب الـ reviews ──
   const { data: reviewsRaw = [], isLoading } = useQuery<any[]>({
     queryKey: ['reviews'],
     queryFn:  reviewApi.getAll,
@@ -36,11 +36,10 @@ export default function ReviewsSection() {
 
   return (
     <>
-      {/* ── Reviews Display ── */}
       <section className="section section-bg">
         <div className="section-header animate">
-          <span className="section-tag">Guest Stories</span>
-          <h2>What Our Guests Say</h2>
+          <span className="section-tag">{t('reviews.tag')}</span>
+          <h2>{t('reviews.title')}</h2>
           <div className="divider-gold" />
         </div>
 
@@ -54,14 +53,14 @@ export default function ReviewsSection() {
           <div className="reviews-grid">
             {reviews.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', gridColumn: '1/-1' }}>
-                <p>No reviews yet. Be the first to review!</p>
+                <p>{t('reviews.empty')}</p>
               </div>
             ) : (
               reviews.map((review) => {
                 const rateValue = Math.min(5, Math.max(0, Math.round(Number(review.rating) || 0)))
                 const commentText = review.comment ?? '—'
                 const reviewerName: string =
-                  review.customer?.name ?? review.customer_name ?? review.customerName ?? 'Guest'
+                  review.customer?.name ?? review.customer_name ?? review.customerName ?? t('reviews.guest')
 
                 return (
                   <div key={review.id} className="review-card animate">
@@ -71,7 +70,7 @@ export default function ReviewsSection() {
                       <div className="review-avatar">{reviewerName[0] || 'G'}</div>
                       <div>
                         <div className="review-name">{reviewerName}</div>
-                        <div className="review-loc">Verified Guest</div>
+                        <div className="review-loc">{t('reviews.verified')}</div>
                       </div>
                     </div>
                   </div>
@@ -86,17 +85,16 @@ export default function ReviewsSection() {
             className="btn-outline animate"
             onClick={() => document.getElementById('reviewSection')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            Write a Review <i className="fa-solid fa-pen" style={{ marginLeft: '0.4rem' }} />
+            {t('reviews.write')} <i className="fa-solid fa-pen" style={{ marginInlineStart: '0.4rem' }} />
           </button>
         </div>
       </section>
 
-      {/* ── Write a Review ── */}
       <section className="section" id="reviewSection">
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div className="section-header animate">
-            <span className="section-tag">Share Your Experience</span>
-            <h2>Write a Review</h2>
+            <span className="section-tag">{t('reviews.formTag')}</span>
+            <h2>{t('reviews.write')}</h2>
             <div className="divider-gold" />
           </div>
 
@@ -105,8 +103,8 @@ export default function ReviewsSection() {
 
             {success && (
               <div style={{ marginTop: '1rem', padding: '0.9rem', background: 'rgba(34,197,94,0.08)', border: '1px solid #22c55e', color: '#22c55e', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' }}>
-                <i className="fa-solid fa-check-circle" style={{ marginRight: '0.4rem' }} />
-                Thank you! Your review has been published successfully.
+                <i className="fa-solid fa-check-circle" style={{ marginInlineEnd: '0.4rem' }} />
+                {t('reviews.success')}
               </div>
             )}
           </div>
