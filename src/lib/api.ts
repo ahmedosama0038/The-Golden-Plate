@@ -17,7 +17,11 @@ export const productApi = {
     const response = await api.get('/products')
     return response.data.data
   },
-
+  // المنيو العام: المنتجات الـ active بس
+  getActive: async () => {
+    const response = await api.get('/products', { params: { is_active: 1 } })
+    return response.data.data
+  },
   // الفلترة من القايمة (ممكن نستخدم ?category_id= و ?name= من ريم بعدين)
   getById: async (id: string) => {
     const all = await productApi.getAll()
@@ -41,13 +45,13 @@ export const productApi = {
     return api.post(`/products/${id}`, data)
   },
   // إظهار/إخفاء المنتج: لارافيل بيطلب category_id وname (وbase_price لو من غير أحجام)
-  setActive: (item: any, active: boolean) => {
+     setActive: (item: any, active: boolean) => {
     const hasSizes = Array.isArray(item.sizes) && item.sizes.length > 0
 
-    // مش هنلمس أحجام منتج وإحنا مش عارفين التعديل بيستبدل ولا بيضيف
+    // تعديل المنتج بأحجام محتاج sizes، ومش عارفين ريم بتستبدل ولا بتضيف
     if (hasSizes) {
       return Promise.reject(
-        new Error('Products with sizes can only be hidden after the backend update')
+        new Error('Hiding dishes with sizes needs a backend update (ask Reem for PATCH /products/{id}/status)')
       )
     }
 
@@ -173,31 +177,27 @@ export const reservationApi = {
   },
 }
 
-// ── 6️⃣ العملاء (Customer) — ريم لسه شغالة عليها ──
+
+// ── 6️⃣ العملاء (Customer) — من /dashboard/customers ──
 export const customerApi = {
-  getAll: async () => {
-    const response = await api.get('/Customer')
-    return response.data.data
-  },
-  getById: async (id: number) => {
-    const response = await api.get(`/Customer/${id}`)
-    return response.data.data
-  },
-  getStatistics: async (id: number) => {
-    const response = await api.get(`/Customer/${id}/statistics`)
-    return response.data.data
-  },
-  searchByPhone: async (phone: string) => {
-    const response = await api.get(`/Customer/search/${phone}`)
+  getAll: async (params?: { name?: string; phone?: string }) => {
+    const response = await api.get('/dashboard/customers', { params })
     return response.data.data
   },
 }
 
 // ── 7️⃣ الإضافات (Extra) — ريم لسه شغالة عليها ──
 export const extraApi = {
-  getAll: async (): Promise<Extra[]> => {
-    const response = await api.get('/Extra')
-    return response.data.data || response.data
+    getAll: async (): Promise<Extra[]> => {
+    const response = await api.get('/products/extras')
+    const list = response.data.data ?? response.data
+    // الحقول بالـ snake_case غالباً، فبنحوّلها للشكل اللي SizeModal بيقراه (تخمين لحد ما نشوف رد حقيقي)
+    return (Array.isArray(list) ? list : []).map((e: any) => ({
+      ...e,
+      price: Number(e.price ?? 0),
+      isAvailableAlone: e.isAvailableAlone ?? e.is_available_alone ?? true,
+      isDeleted: e.isDeleted ?? e.is_deleted ?? e.is_active === false,
+    }))
   },
   create: async (data: CreateExtraDto) => {
     return api.post('/Extra', data)

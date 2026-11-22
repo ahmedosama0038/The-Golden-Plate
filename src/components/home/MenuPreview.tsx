@@ -48,7 +48,7 @@ export default function MenuPreview() {
 
   const { data: products = [], isLoading, isError } = useQuery<any[]>({
     queryKey: ['products'],
-    queryFn:  productApi.getAll,
+      queryFn:  productApi.getActive,
   })
 
  const featured = products.filter((p) => p.is_active !== false).slice(0, 4) 

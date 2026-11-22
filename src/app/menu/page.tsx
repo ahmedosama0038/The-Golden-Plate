@@ -49,7 +49,7 @@ export default function MenuPage() {
     error,
   } = useQuery<MenuItem[]>({
     queryKey: ['products'],
-    queryFn: () => productApi.getAll(),
+       queryFn: () => productApi.getActive(),
   })
 
   // ── تظبيط البيانات والأسعار والصور ──
