@@ -1,6 +1,7 @@
 // ============================================================
 //  data/restaurant.ts  —  بيانات المطعم
 //  المنيو والتقييمات بقوا جايين من الـ API (ريم)، فاتشالوا من هنا
+//  أي حقل فاضي في contact أو socials بيتخفي من الموقع لوحده
 // ============================================================
 
 import type {
@@ -11,7 +12,7 @@ import type {
 } from '@/types'
 
 // ─────────────────────────────────────────────────────────────
-//  TEAM
+//  TEAM  (TODO: وهمي، صفحة About مخفية من الناف لحد ما تتغير)
 // ─────────────────────────────────────────────────────────────
 
 export const teamMembers: TeamMember[] = [
@@ -42,7 +43,7 @@ export const teamMembers: TeamMember[] = [
 ]
 
 // ─────────────────────────────────────────────────────────────
-//  TIMELINE
+//  TIMELINE  (TODO: وهمي)
 // ─────────────────────────────────────────────────────────────
 
 export const timeline: TimelineItem[] = [
@@ -70,13 +71,11 @@ export const timeline: TimelineItem[] = [
 
 // ─────────────────────────────────────────────────────────────
 //  SOCIAL LINKS
+//  فاضية لحد ما يبقى فيه روابط حقيقية. الشكل:
+//  { platform: 'instagram', url: 'https://instagram.com/اسم_الحساب', icon: 'fa-brands fa-instagram' }
 // ─────────────────────────────────────────────────────────────
 
-export const socialLinks: SocialLink[] = [
-  { platform: 'instagram', url: 'https://instagram.com', icon: 'fa-brands fa-instagram' },
-  { platform: 'facebook', url: 'https://facebook.com', icon: 'fa-brands fa-facebook-f' },
-  { platform: 'twitter', url: 'https://twitter.com', icon: 'fa-brands fa-x-twitter' },
-]
+export const socialLinks: SocialLink[] = []
 
 // ─────────────────────────────────────────────────────────────
 //  FULL RESTAURANT DATA OBJECT
@@ -86,7 +85,7 @@ export const restaurantData: RestaurantData = {
   settings: {
     restaurantName: 'The Golden Plate',
     tagline: 'Crafted for the discerning palate.',
-    currency: '$',
+    currency: 'ج.م',
     accentColor: '#E0E0E0',
     enableOrdering: true,
     enableReservations: true,
@@ -102,16 +101,15 @@ export const restaurantData: RestaurantData = {
     ctaText: 'Explore the Menu',
   },
 
-  // TODO: بيانات وهمية، غيّرها بالحقيقية قبل أي عرض
+  // الحقل الفاضي بيتخفي من صفحة الحجز. عبّيه لما تعرف القيمة الحقيقية.
   contact: {
-    address: '123 Golden Avenue, Luxury District, New York, NY 10001',
+    address: '',         // العنوان بالتفصيل
     phone: '01021245010',
-    email: 'reservations@goldenplate.com',
-    whatsapp: '01021245010',
-    mapEmbedUrl:
-      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976397304603!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1734567890123',
-    hoursWeekday: 'Mon–Fri: 12:00 PM – 11:00 PM',
-    hoursWeekend: 'Sat–Sun: 11:00 AM – 12:00 AM',
+    email: '',
+    whatsapp: '01021245010', // بيتقبل بالصفر أو بكود مصر، والتحويل أوتوماتيك
+    mapEmbedUrl: '',     // الـ src بتاع iframe من Google Maps ← Share ← Embed a map
+    hoursWeekday: '',    // مثال: 'السبت–الخميس: 12:00 PM – 11:00 PM'
+    hoursWeekend: '',    // مثال: 'الجمعة: 1:00 PM – 12:00 AM'
   },
 
   socials: socialLinks,

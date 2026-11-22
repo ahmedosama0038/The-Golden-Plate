@@ -2,11 +2,10 @@
 
 import Link from 'next/link'
 import { useLang, type DictKey } from '@/lib/i18n'
-
 const BADGES: { icon: string; key: DictKey }[] = [
-  { icon: 'fa-solid fa-star',       key: 'hero.badge1' },
-  { icon: 'fa-solid fa-leaf',       key: 'hero.badge2' },
-  { icon: 'fa-solid fa-wine-glass', key: 'hero.badge3' },
+  { icon: 'fa-solid fa-bag-shopping',   key: 'hero.badge1' },
+  { icon: 'fa-solid fa-calendar-check', key: 'hero.badge2' },
+  { icon: 'fa-solid fa-truck-fast',     key: 'hero.badge3' },
 ]
 
 export default function HeroSection() {

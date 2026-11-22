@@ -1,12 +1,11 @@
 'use client'
 
 import { useLang, type DictKey } from '@/lib/i18n'
-
 const FEATURES: { icon: string; title: DictKey; desc: DictKey; delay?: string }[] = [
-  { icon: 'fa-solid fa-award',            title: 'features.f1.title', desc: 'features.f1.desc' },
-  { icon: 'fa-solid fa-seedling',         title: 'features.f2.title', desc: 'features.f2.desc', delay: '0.1s' },
-  { icon: 'fa-solid fa-champagne-glasses', title: 'features.f3.title', desc: 'features.f3.desc', delay: '0.2s' },
-  { icon: 'fa-solid fa-utensils',         title: 'features.f4.title', desc: 'features.f4.desc', delay: '0.3s' },
+  { icon: 'fa-solid fa-bag-shopping',   title: 'features.f1.title', desc: 'features.f1.desc' },
+  { icon: 'fa-solid fa-calendar-check', title: 'features.f2.title', desc: 'features.f2.desc', delay: '0.1s' },
+  { icon: 'fa-solid fa-truck-fast',     title: 'features.f3.title', desc: 'features.f3.desc', delay: '0.2s' },
+  { icon: 'fa-brands fa-whatsapp',      title: 'features.f4.title', desc: 'features.f4.desc', delay: '0.3s' },
 ]
 
 export default function FeaturesSection() {

@@ -1,13 +1,14 @@
-
-// ============================================================
-//  MapSection.tsx — الخريطة
-//  Server Component — iframe ثابت
-// ============================================================
+'use client'
 
 import { restaurantData } from '@/data/restaurant'
+import { useLang } from '@/lib/i18n'
 
 export default function MapSection() {
   const { contact } = restaurantData
+  const { t } = useLang()
+
+  // مفيش رابط خريطة حقيقي = مفيش خريطة
+  if (!contact.mapEmbedUrl) return null
 
   return (
     <div style={{
@@ -21,7 +22,7 @@ export default function MapSection() {
           allowFullScreen
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          title="Restaurant Location"
+          title={t('info.mapTitle')}
         />
       </div>
     </div>

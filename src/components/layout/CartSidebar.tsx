@@ -1,5 +1,6 @@
 'use client'
-
+import { restaurantData } from '@/data/restaurant'
+import { toWaNumber } from '@/lib/adminWhatsApp'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@tanstack/react-query'
@@ -10,7 +11,7 @@ import { CheckoutFormData } from '@/lib/schemas'
 import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { toast } from '@/lib/toast'
 
-const WA_NUMBER = '201021245010'
+const WA_NUMBER = toWaNumber(restaurantData.contact.whatsapp)
 
 export default function CartSidebar() {
   const {
