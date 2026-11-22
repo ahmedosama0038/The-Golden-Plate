@@ -8,6 +8,7 @@ const NAV = [
     section: 'Main',
     links: [
       { href: '/admin/dashboard',    label: 'Dashboard',    icon: 'fa-solid fa-chart-line'    },
+      { href: '/admin/analytics',    label: 'Analytics',    icon: 'fa-solid fa-chart-pie'     },
       { href: '/admin/orders',       label: 'Orders',       icon: 'fa-solid fa-bag-shopping'  },
       { href: '/admin/reservations', label: 'Reservations', icon: 'fa-solid fa-calendar-days' },
       { href: '/admin/reviews',      label: 'Reviews',      icon: 'fa-solid fa-star'          },
@@ -19,7 +20,7 @@ const NAV = [
     links: [
       { href: '/admin/menu',         label: 'Menu Items',   icon: 'fa-solid fa-utensils'      },
       { href: '/admin/categories',   label: 'Categories',   icon: 'fa-solid fa-folder-open'   },
-      { href: '/admin/extras',       label: 'Extras',       icon: 'fa-solid fa-plus-minus'    }, // ← أضفنا الإضافات هنا يا أبو حميد!
+      { href: '/admin/extras',       label: 'Extras',       icon: 'fa-solid fa-plus-minus'    },
       { href: '/admin/hero',         label: 'Hero Section', icon: 'fa-solid fa-image'         },
       { href: '/admin/about',        label: 'About Page',   icon: 'fa-solid fa-circle-info'   },
       { href: '/admin/contact-info', label: 'Contact Info', icon: 'fa-solid fa-phone'         },
@@ -35,10 +36,9 @@ const NAV = [
   },
 ]
 
-// 🎯 استقبلنا isOpen و onClose عشان الموبيل
 interface SidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -52,7 +52,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* 🎯 الخلفية المظلمة اللي بتقفل السايدبار لما تضغط برا على الموبيل */}
       {isOpen && <div className="adm-sidebar-overlay" onClick={onClose} />}
 
       <aside className={`adm-sidebar ${isOpen ? 'mobile-open' : ''}`}>
@@ -60,7 +59,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="adm-logo">
           The Golden Plate
           <span>Admin Panel</span>
-          {/* زرار قفل السايدبار على الموبيل بس */}
           <button className="adm-sidebar-close" onClick={onClose}>
             <i className="fa-solid fa-xmark" />
           </button>
@@ -75,7 +73,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   key={href}
                   href={href}
                   className={`adm-nav-link${pathname === href ? ' active' : ''}`}
-                  onClick={onClose} // 🎯 يقفل السايدبار أوتوماتيك أول ما تضغط على لينك في الموبيل
+                  onClick={onClose}
                 >
                   <i className={icon} />
                   {label}
