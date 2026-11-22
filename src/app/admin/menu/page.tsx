@@ -10,6 +10,14 @@ import { toast } from '@/lib/toast'
 
 type StatusFilter = 'all' | 'active' | 'inactive'
 
+// أول رسالة خطأ من لارافيل (errors أو message)
+const getApiMessage = (err: any, fallback: string) => {
+  const data = err?.response?.data
+  const firstField = data?.errors ? Object.values(data.errors)[0] : null
+  if (Array.isArray(firstField) && firstField[0]) return String(firstField[0])
+  return data?.message ?? fallback
+}
+
 export default function AdminMenuPage() {
   const queryClient = useQueryClient()
 
@@ -61,9 +69,24 @@ export default function AdminMenuPage() {
     onError: () => {
       toast.error(
         'Failed to delete item',
-        'If this dish is linked to old orders, set it to inactive instead.'
+        'If this dish is linked to old orders, hide it instead (eye button).'
       )
     }
+  })
+
+  // إظهار/إخفاء المنتج
+  const activeMutation = useMutation({
+        mutationFn: ({ item, active }: { item: any; active: boolean }) =>
+      productApi.setActive(item, active),
+    onSuccess: (_res, { active }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      toast.success(active ? 'Dish is now visible on the menu' : 'Dish hidden from the menu')
+    },
+    onError: (err: any) => {
+      console.error('setActive failed:', err?.response?.status, err?.response?.data ?? err)
+          toast.error('Could not change status', getApiMessage(err, err?.message ?? 'Please try again'))
+    },
   })
 
   // المنتج active ما لم يكن is_active === false صراحةً
@@ -231,6 +254,15 @@ export default function AdminMenuPage() {
                       </td>
                       <td>
                         <div className="adm-actions-cell">
+                          <button
+                            className="adm-action-btn edit"
+                            disabled={activeMutation.isPending}
+                    onClick={() => activeMutation.mutate({ item, active: !active })}
+                            title={active ? 'Hide from menu' : 'Show on menu'}
+                            style={{ color: active ? '#22c55e' : 'var(--adm-muted)' }}
+                          >
+                            <i className={`fa-solid ${active ? 'fa-eye' : 'fa-eye-slash'}`} />
+                          </button>
                           <button
                             className="adm-action-btn edit"
                             onClick={() => { setSelectedItem(item); setShowModal(true); }}

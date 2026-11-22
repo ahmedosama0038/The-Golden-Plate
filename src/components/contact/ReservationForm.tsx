@@ -52,9 +52,9 @@ export default function ReservationForm() {
       setApiError(t('err.datePast'))
       return
     }
-
     try {
-      await orderApi.create({
+      // مفيش items: الباك بيعتبر المصفوفة الفاضية غلط (min:1) لكن الحقل الغايب مقبول للحجز
+      const payload: any = {
         customerName:   data.customerName.trim(),
         customerPhone:  data.customerPhone,
         order_type:     'reservation',
@@ -62,8 +62,8 @@ export default function ReservationForm() {
         dateOnly:       data.dateOnly,
         timeOnly:       data.timeOnly + ':00',
         notes:          data.notes?.trim() || undefined,
-        items:          [],
-      })
+      }
+      await orderApi.create(payload)
 
       setSuccess(true)
       reset()

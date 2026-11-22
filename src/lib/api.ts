@@ -11,7 +11,6 @@ export const api = axios.create({
   // عشان لارافيل يرد JSON حتى في الأخطاء
   headers: { Accept: 'application/json' },
 })
-
 // ── 1️⃣ المنتجات (Products) ──
 export const productApi = {
   getAll: async () => {
@@ -40,6 +39,26 @@ export const productApi = {
   update: (id: string | number, data: FormData) => {
     data.append('_method', 'PUT')
     return api.post(`/products/${id}`, data)
+  },
+  // إظهار/إخفاء المنتج: لارافيل بيطلب category_id وname (وbase_price لو من غير أحجام)
+  setActive: (item: any, active: boolean) => {
+    const hasSizes = Array.isArray(item.sizes) && item.sizes.length > 0
+
+    // مش هنلمس أحجام منتج وإحنا مش عارفين التعديل بيستبدل ولا بيضيف
+    if (hasSizes) {
+      return Promise.reject(
+        new Error('Products with sizes can only be hidden after the backend update')
+      )
+    }
+
+    const fd = new FormData()
+    fd.append('name', item.name)
+    fd.append('category_id', String(item.category_id))
+    fd.append('description', item.description ?? '')
+    fd.append('base_price', String(item.base_price ?? 0))
+    fd.append('is_active', active ? '1' : '0')
+    fd.append('_method', 'PUT')
+    return api.post(`/products/${item.id}`, fd)
   },
 
   delete: (id: string | number) => api.delete(`/products/${id}`),
