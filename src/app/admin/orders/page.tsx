@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import TopBar from '@/components/admin/TopBar'
 import { orderApi } from '@/lib/api'
 import { toast } from '@/lib/toast'
+import { openCustomerWhatsApp } from '@/lib/adminWhatsApp'
 import type { ApiOrder, ApiOrderStatus } from '@/types'
 
 const CURRENCY = 'ج.م'
@@ -29,11 +30,10 @@ export default function OrdersPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | ApiOrderStatus>('all')
 
-  // الطلبات والحجوزات جاية من نفس الـ endpoint، فنفس الـ queryKey للصفحتين
   const { data: orders = [], isLoading, isError, error } = useQuery<ApiOrder[]>({
     queryKey: ['admin-orders'],
     queryFn: orderApi.getAll,
-    refetchInterval: 30_000, // طلبات جديدة تظهر لوحدها كل 30 ثانية
+    refetchInterval: 30_000,
   })
 
   const statusMutation = useMutation({
@@ -51,7 +51,6 @@ export default function OrdersPage() {
   const handleStatusChange = (order: ApiOrder, status: ApiOrderStatus) => {
     if (status === order.status) return
 
-    // الإلغاء مفيش رجوع فيه، فبنأكد الأول
     if (status === 'cancelled') {
       toast.confirm(
         'Cancel Order',
@@ -63,7 +62,6 @@ export default function OrdersPage() {
     statusMutation.mutate({ id: order.id, status })
   }
 
-  // الدليفري بس، الأحدث الأول
   const deliveryOrders = orders
     .filter((o) => o.order_type === 'delivery')
     .sort((a, b) => b.id - a.id)
@@ -190,6 +188,24 @@ export default function OrdersPage() {
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
+                      <button
+                        type="button"
+                        onClick={() => openCustomerWhatsApp(order)}
+                        style={{
+                          display: 'block',
+                          marginTop: '0.4rem',
+                          background: '#25D366',
+                          color: '#000',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '0.3rem 0.6rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <i className="fa-brands fa-whatsapp" /> WhatsApp
+                      </button>
                     </td>
                     <td style={{ color: 'var(--adm-muted)', fontSize: '0.75rem' }}>
                       {order.created_at.slice(0, 16)}

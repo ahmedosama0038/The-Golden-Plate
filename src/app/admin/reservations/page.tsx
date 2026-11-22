@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import TopBar from '@/components/admin/TopBar'
 import { orderApi } from '@/lib/api'
 import { toast } from '@/lib/toast'
+import { openCustomerWhatsApp } from '@/lib/adminWhatsApp'
 import type { ApiOrder, ApiOrderStatus } from '@/types'
 
 const CURRENCY = 'ج.م'
@@ -29,7 +30,6 @@ export default function ReservationsPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | ApiOrderStatus>('all')
 
-  // نفس queryKey بتاع صفحة Orders، فالطلب بيتشارك
   const { data: orders = [], isLoading, isError, error } = useQuery<ApiOrder[]>({
     queryKey: ['admin-orders'],
     queryFn: orderApi.getAll,
@@ -62,7 +62,6 @@ export default function ReservationsPage() {
     statusMutation.mutate({ id: order.id, status })
   }
 
-  // الحجوزات بس، الأحدث الأول
   const reservations = orders
     .filter((o) => o.order_type === 'reservation')
     .sort((a, b) => b.id - a.id)
@@ -202,6 +201,24 @@ export default function ReservationsPage() {
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
+                      <button
+                        type="button"
+                        onClick={() => openCustomerWhatsApp(r)}
+                        style={{
+                          display: 'block',
+                          marginTop: '0.4rem',
+                          background: '#25D366',
+                          color: '#000',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '0.3rem 0.6rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <i className="fa-brands fa-whatsapp" /> WhatsApp
+                      </button>
                     </td>
                   </tr>
                 ))}
