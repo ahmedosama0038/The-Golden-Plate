@@ -8,10 +8,13 @@ import TopBar from '@/components/admin/TopBar'
 import AddProductModal from '@/components/admin/AddProductModal'
 import { toast } from '@/lib/toast'
 
+type StatusFilter = 'all' | 'active' | 'inactive'
+
 export default function AdminMenuPage() {
   const queryClient = useQueryClient()
 
   const [filter, setFilter] = useState<string | number | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<any>(null)
@@ -56,23 +59,40 @@ export default function AdminMenuPage() {
       })
     },
     onError: () => {
-      toast.error('Failed to delete item')
+      toast.error(
+        'Failed to delete item',
+        'If this dish is linked to old orders, set it to inactive instead.'
+      )
     }
   })
 
+  // المنتج active ما لم يكن is_active === false صراحةً
+  const isActive = (item: MenuItem) => (item as any).is_active !== false
+
+  const activeCount = items.filter(isActive).length
+  const inactiveCount = items.length - activeCount
+
   const filtered = items.filter((item) => {
     const itemAny = item as any
-    // 🆕 رقم القسم من الشكل الجديد (category_id) أو القديم
     const currentCatId = String(itemAny.category_id ?? itemAny.categoryId ?? '')
 
     const matchCat = filter === 'all' || currentCatId === String(filter)
     const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase())
-    return matchCat && matchSearch
+    const matchStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'active' ? isActive(item) : !isActive(item))
+    return matchCat && matchSearch && matchStatus
   })
+
+  const STATUS_TABS: { key: StatusFilter; label: string }[] = [
+    { key: 'all', label: `All status (${items.length})` },
+    { key: 'active', label: `Active (${activeCount})` },
+    { key: 'inactive', label: `Inactive (${inactiveCount})` },
+  ]
 
   return (
     <>
-      <TopBar title="Menu Management" subtitle="Add, edit, or remove dishes from the menu." />
+      <TopBar title="Menu Management" subtitle="Add, edit, or hide dishes from the menu." />
 
       <div className="adm-content">
 
@@ -115,6 +135,19 @@ export default function AdminMenuPage() {
           </button>
         </div>
 
+        {/* فلتر الحالة */}
+        <div className="adm-filter-group" style={{ marginBottom: '1rem' }}>
+          {STATUS_TABS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setStatusFilter(s.key)}
+              className={`adm-btn-tab ${statusFilter === s.key ? 'active' : ''}`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
         {/* Loading State */}
         {isLoading && (
           <div className="adm-loading-state">
@@ -133,14 +166,16 @@ export default function AdminMenuPage() {
                   <th>Dish Name</th>
                   <th>Category</th>
                   <th>Price</th>
+                  <th>Status</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((item) => {
                   const itemAny = item as any
+                  const active = isActive(item)
 
-                  // 🆕 السعر: أول حجم (الشكل الجديد) أو base_price
+                  // السعر: أول حجم (الشكل الجديد) أو base_price
                   const firstSize = itemAny.sizes?.[0]
                   const displayPrice = firstSize
                     ? `From ${firstSize.price} ج.م`
@@ -153,13 +188,16 @@ export default function AdminMenuPage() {
                       ? backendSrc
                       : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200&auto=format&fit=crop')
 
-                  // 🆕 اسم القسم من category_id
                   const categoryName = categories.find(
                     (c) => String(c.id) === String(itemAny.category_id ?? itemAny.categoryId)
                   )?.name || '—'
 
                   return (
-                    <tr key={item.id} className="adm-table-row">
+                    <tr
+                      key={item.id}
+                      className="adm-table-row"
+                      style={{ opacity: active ? 1 : 0.5 }}
+                    >
                       <td style={{ width: '80px' }}>
                         <div className="adm-img-container">
                           <img
@@ -185,6 +223,11 @@ export default function AdminMenuPage() {
                       </td>
                       <td>
                         <span className="adm-item-price">{displayPrice}</span>
+                      </td>
+                      <td>
+                        <span className={`adm-badge ${active ? 'green' : 'red'}`}>
+                          {active ? 'Active' : 'Inactive'}
+                        </span>
                       </td>
                       <td>
                         <div className="adm-actions-cell">
@@ -217,7 +260,7 @@ export default function AdminMenuPage() {
 
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="adm-empty-table">
+                    <td colSpan={6} className="adm-empty-table">
                       <i className="fa-solid fa-bowl-food" />
                       <p>No dishes found matching the criteria.</p>
                     </td>
@@ -231,11 +274,11 @@ export default function AdminMenuPage() {
 
       {/* Add / Edit Modal */}
       {showModal && (
-             <AddProductModal
-  categories={categories}
-  editItem={selectedItem}
-  onClose={() => { setShowModal(false); setSelectedItem(null); }}
-/>
+        <AddProductModal
+          categories={categories}
+          editItem={selectedItem}
+          onClose={() => { setShowModal(false); setSelectedItem(null); }}
+        />
       )}
     </>
   )

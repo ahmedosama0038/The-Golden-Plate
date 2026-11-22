@@ -51,7 +51,7 @@ export default function MenuPreview() {
     queryFn:  productApi.getAll,
   })
 
-  const featured = products.slice(0, 4)
+ const featured = products.filter((p) => p.is_active !== false).slice(0, 4) 
 
   useAnimate([products])
 
