@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useMutation } from '@tanstack/react-query'
 import { useCart } from '@/hooks/useCart'
 import { useLang } from '@/lib/i18n'
@@ -18,6 +19,7 @@ export default function CartSidebar() {
     buildWhatsAppMessage, buildExtrasNote, emptyCart,
   } = useCart()
   const { t } = useLang()
+  const router = useRouter()
   const currency = t('currency')
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
 
@@ -66,11 +68,15 @@ export default function CartSidebar() {
   const orderMutation = useMutation({
     mutationFn: (data: CheckoutFormData) => orderApi.create(buildPayload(data)),
 
+    // ← هنا: لما الطلب ينجح
     onSuccess: (_res, data) => {
-      toast.success(
+      toast.orderSuccess(
         data.order_type === 'delivery'
           ? t('cart.toast.orderOk')
-          : t('cart.toast.reservationOk')
+          : t('cart.toast.reservationOk'),
+        t('trk.cta'),
+        t('trk.close'),
+        () => router.push(`/track?phone=${data.customerPhone}`)
       )
       finishOrder(data)
     },

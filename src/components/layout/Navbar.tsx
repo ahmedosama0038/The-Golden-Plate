@@ -13,6 +13,7 @@ const NAV_LINKS: { href: string; key: DictKey }[] = [
   { href: '/menu',        key: 'nav.menu'        },
   { href: '/about',       key: 'nav.story'       },
   { href: '/reservation', key: 'nav.reservation' },
+    { href: '/track', key: 'nav.track' },
 ]
 
 export default function Navbar() {

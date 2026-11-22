@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { orderApi, reviewApi } from '@/lib/api'
-import { reviewSchema } from '@/lib/schemas'
 import { toast } from '@/lib/toast'
+import { useLang } from '@/lib/i18n'
 import type { ApiOrder } from '@/types'
 
 const PHONE_RE = /^01[0125][0-9]{8}$/
@@ -15,6 +15,7 @@ interface Props {
 
 export default function ReviewForm({ onDone }: Props) {
   const queryClient = useQueryClient()
+  const { t, lang } = useLang()
 
   const [phone, setPhone] = useState('')
   const [orders, setOrders] = useState<ApiOrder[] | null>(null)
@@ -23,9 +24,16 @@ export default function ReviewForm({ onDone }: Props) {
   const [comment, setComment] = useState('')
   const [error, setError] = useState('')
 
-  // الطلبات اللي تستاهل تقييم: مكتملة ولسه ما اتقيّمتش
+  // الطلبات اللي تستاهل تقييم: can_review ولسه ما اتقيّمتش
   const eligible = (orders ?? []).filter((o) => o.can_review && !o.is_reviewed)
   const alreadyReviewed = (orders ?? []).filter((o) => o.is_reviewed).length
+
+  // رسالة الخطأ: 5xx أو من غير رد = الخدمة مشغولة، غير كده رسالة الباك أو احتياطية
+  const getErrMessage = (err: any, fallback: string) => {
+    const status = err?.response?.status
+    if (!status || status >= 500) return t('rv.err.busy')
+    return err?.response?.data?.message ?? fallback
+  }
 
   // ── 1) هات طلبات العميل بالتليفون ──
   const findOrders = useMutation({
@@ -37,7 +45,8 @@ export default function ReviewForm({ onDone }: Props) {
       setSelectedId(first ? first.id : null)
     },
     onError: (err: any) => {
-      setError(err?.response?.data?.message ?? 'تعذر جلب الطلبات، حاول تاني')
+      console.error('track failed:', err?.response?.status, err?.response?.data ?? err)
+      setError(getErrMessage(err, t('rv.err.fetch')))
     },
   })
 
@@ -54,24 +63,19 @@ export default function ReviewForm({ onDone }: Props) {
       queryClient.invalidateQueries({ queryKey: ['reviews'] })
       queryClient.invalidateQueries({ queryKey: ['admin-reviews'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-reviews'] })
-      toast.success('شكراً لتقييمك!')
+      toast.success(t('rv.thanks'))
       onDone?.()
     },
-   onError: (err: any) => {
-  const status = err?.response?.status
-  console.error('track failed:', status, err?.response?.data ?? err)
-  setError(
-    status >= 500 || !status
-      ? 'الخدمة مشغولة حالياً، جرّب بعد شوية'
-      : err?.response?.data?.message ?? 'تعذر جلب الطلبات'
-  )
-},
+    onError: (err: any) => {
+      console.error('review failed:', err?.response?.status, err?.response?.data ?? err)
+      setError(getErrMessage(err, t('rv.err.submit')))
+    },
   })
 
   const handleFind = () => {
     setError('')
     if (!PHONE_RE.test(phone)) {
-      setError('رقم تليفون مصري غير صحيح')
+      setError(t('err.phone'))
       return
     }
     findOrders.mutate(phone)
@@ -79,16 +83,9 @@ export default function ReviewForm({ onDone }: Props) {
 
   const handleSubmit = () => {
     setError('')
-    const parsed = reviewSchema.safeParse({
-      order_id: selectedId,
-      customerPhone: phone,
-      rating,
-      comment,
-    })
-    if (!parsed.success) {
-      setError(parsed.error.issues[0].message)
-      return
-    }
+    if (!selectedId) return setError(t('rv.err.order'))
+    if (rating < 1) return setError(t('rv.err.rating'))
+    if (comment.trim().length < 10) return setError(t('rv.err.comment'))
     submitReview.mutate()
   }
 
@@ -101,10 +98,11 @@ export default function ReviewForm({ onDone }: Props) {
   }
 
   const orderLabel = (o: ApiOrder) => {
-    const type = o.order_type === 'delivery' ? 'دليفري' : 'حجز'
+    const type = o.order_type === 'delivery' ? t('rv.delivery') : t('rv.reservation')
+    const sep = lang === 'ar' ? '، ' : ', '
     const what =
       o.items.length > 0
-        ? o.items.map((i) => `${i.product_name} x${i.quantity}`).join('، ')
+        ? o.items.map((i) => `${i.product_name} x${i.quantity}`).join(sep)
         : o.date_only ?? ''
     return `#${o.id} — ${type} — ${what}`
   }
@@ -115,36 +113,33 @@ export default function ReviewForm({ onDone }: Props) {
       {orders === null && (
         <>
           <div className="co-field">
-            <label htmlFor="rv-phone">رقم التليفون اللي طلبت بيه</label>
+            <label htmlFor="rv-phone">{t('rv.phoneLabel')}</label>
             <input
               id="rv-phone"
               type="tel"
+              dir="ltr"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="01xxxxxxxxx"
             />
           </div>
-         <button
-  type="button"
-  className="submit-btn"
-  onClick={handleFind}
-  disabled={findOrders.isPending}
->
-  {findOrders.isPending ? 'جاري البحث...' : 'ابحث عن طلباتي'}
-</button>
+          <button
+            type="button"
+            className="submit-btn"
+            onClick={handleFind}
+            disabled={findOrders.isPending}
+          >
+            {findOrders.isPending ? t('rv.searching') : t('rv.search')}
+          </button>
         </>
       )}
 
       {/* ── مفيش طلبات تستاهل تقييم ── */}
       {orders !== null && eligible.length === 0 && (
         <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-          <p>
-            {alreadyReviewed > 0
-              ? 'إنت قيّمت كل طلباتك المكتملة، شكراً ليك!'
-              : 'مفيش طلبات مكتملة تقدر تقيّمها لسه. التقييم بيفتح لما طلبك أو حجزك يخلص.'}
-          </p>
-          <button type="button" className="btn-secondary" onClick={changePhone}>
-            رقم تاني
+          <p>{alreadyReviewed > 0 ? t('rv.allReviewed') : t('rv.noEligible')}</p>
+          <button type="button" className="btn-outline" onClick={changePhone}>
+            {t('rv.changePhone')}
           </button>
         </div>
       )}
@@ -153,7 +148,7 @@ export default function ReviewForm({ onDone }: Props) {
       {orders !== null && eligible.length > 0 && (
         <>
           <div className="co-field">
-            <label htmlFor="rv-order">اختار الطلب</label>
+            <label htmlFor="rv-order">{t('rv.chooseOrder')}</label>
             <select
               id="rv-order"
               value={selectedId ?? ''}
@@ -176,14 +171,14 @@ export default function ReviewForm({ onDone }: Props) {
           </div>
 
           <div className="co-field">
-            <label>تقييمك</label>
+            <label>{t('rv.rating')}</label>
             <div style={{ display: 'flex', gap: '0.3rem', fontSize: '1.8rem' }}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => setRating(n)}
-                  aria-label={`${n} stars`}
+                  aria-label={`${n} / 5`}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -199,7 +194,7 @@ export default function ReviewForm({ onDone }: Props) {
           </div>
 
           <div className="co-field">
-            <label htmlFor="rv-comment">رأيك (10 حروف على الأقل)</label>
+            <label htmlFor="rv-comment">{t('rv.comment')}</label>
             <textarea
               id="rv-comment"
               rows={3}
@@ -208,24 +203,19 @@ export default function ReviewForm({ onDone }: Props) {
             />
           </div>
 
-          <div className="checkout-actions">
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
             <button type="button" className="btn-outline" onClick={changePhone}>
-  رقم تاني
-</button>
-           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-  <button type="button" className="btn-outline" onClick={changePhone}>
-    رقم تاني
-  </button>
-  <button
-    type="button"
-    className="submit-btn"
-    onClick={handleSubmit}
-    disabled={submitReview.isPending}
-    style={{ flex: 1 }}
-  >
-    {submitReview.isPending ? 'جاري الإرسال...' : 'أرسل التقييم'}
-  </button>
-</div>
+              {t('rv.changePhone')}
+            </button>
+            <button
+              type="button"
+              className="submit-btn"
+              onClick={handleSubmit}
+              disabled={submitReview.isPending}
+              style={{ flex: 1 }}
+            >
+              {submitReview.isPending ? t('rv.submitting') : t('rv.submit')}
+            </button>
           </div>
         </>
       )}

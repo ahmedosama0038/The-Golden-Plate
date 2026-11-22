@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from '@/lib/providers'
 import { LanguageProvider } from '@/lib/i18n'
 import ConditionalLayout from '@/components/layout/ConditionalLayout'
+import SplashScreen from '@/components/layout/SplashScreen'
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <LanguageProvider>
             <ConditionalLayout>{children}</ConditionalLayout>
           </LanguageProvider>
+           <SplashScreen />
         </Providers>
       </body>
     </html>

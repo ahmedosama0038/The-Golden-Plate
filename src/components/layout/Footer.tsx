@@ -9,6 +9,7 @@ const LINKS: { href: string; key: DictKey }[] = [
   { href: '/about',       key: 'footer.story'    },
   { href: '/reservation', key: 'nav.reservation' },
   { href: '/admin',       key: 'footer.login'    },
+    { href: '/track', key: 'nav.track' },
 ]
 
 const SOCIALS = [

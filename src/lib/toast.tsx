@@ -1,4 +1,4 @@
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2'
 
 // ثيم مخصص يتماشى مع ألوان الـ Admin Dark & Gold اللي عندك
 export const toast = {
@@ -13,9 +13,9 @@ export const toast = {
       background: 'var(--adm-surface, #1e1e1e)',
       color: 'var(--adm-text, #ffffff)',
       iconColor: 'var(--adm-gold, #caa253)',
-    });
+    })
   },
-  
+
   error: (title: string, text?: string) => {
     Swal.fire({
       icon: 'error',
@@ -26,7 +26,30 @@ export const toast = {
       background: 'var(--adm-surface, #1e1e1e)',
       color: 'var(--adm-text, #ffffff)',
       iconColor: '#ef4444',
-    });
+    })
+  },
+
+  // نجاح الطلب: بيعرض زرار يودّي العميل لصفحة التتبع
+  orderSuccess: (
+    title: string,
+    trackLabel: string,
+    closeLabel: string,
+    onTrack: () => void
+  ) => {
+    Swal.fire({
+      icon: 'success',
+      title,
+      showCancelButton: true,
+      confirmButtonText: trackLabel,
+      cancelButtonText: closeLabel,
+      confirmButtonColor: 'var(--adm-gold, #caa253)',
+      cancelButtonColor: 'var(--adm-border, #333)',
+      background: 'var(--adm-surface, #1e1e1e)',
+      color: 'var(--adm-text, #ffffff)',
+      iconColor: 'var(--adm-gold, #caa253)',
+    }).then((result) => {
+      if (result.isConfirmed) onTrack()
+    })
   },
 
   // مخصصة لحوار الـ Confirm بتاع الحذف بدل confirm() العادية
@@ -45,8 +68,8 @@ export const toast = {
       iconColor: 'var(--adm-gold, #caa253)',
     }).then((result) => {
       if (result.isConfirmed) {
-        onConfirm();
+        onConfirm()
       }
-    });
-  }
-};
+    })
+  },
+}
