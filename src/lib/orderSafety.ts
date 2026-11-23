@@ -1,19 +1,48 @@
 import type { CartItem } from '@/types'
 
-export const EXTRAS_CHECKOUT_MESSAGE = {
-  ar: 'الطلب بإضافات غير متاح دلوقتي لأن حساب سعرها على السيرفر لسه مش متوصل. شيل الإضافات عشان تكمل طلبك. السلة مش هتتمسح ومش هنحوّلك لواتساب.',
-  en: 'Orders with extras are unavailable until backend pricing is connected. Remove the extras to continue. Your cart will be kept and you will not be redirected to WhatsApp.',
+export type OrderLine = { product_id: number; size_id: number | null; quantity: number }
+
+export const INVALID_EXTRAS_MESSAGE = {
+  ar: 'في إضافة في السلة بياناتها ناقصة. شيلها وضيفها تاني من المنيو.',
+  en: 'An extra in your cart has incomplete data. Remove it and add it again from the menu.',
 } as const
 
-export class UnverifiedExtrasError extends Error {
+export class InvalidExtrasError extends Error {
   constructor(message: string) {
     super(message)
-    this.name = 'UnverifiedExtrasError'
+    this.name = 'InvalidExtrasError'
   }
 }
 
-export function assertOrderPricingVerified(items: Pick<CartItem, 'selectedExtras'>[], lang: 'ar' | 'en') {
-  if (items.some((item) => (item.selectedExtras?.length ?? 0) > 0)) {
-    throw new UnverifiedExtrasError(EXTRAS_CHECKOUT_MESSAGE[lang])
+// بيحوّل السلة لسطور items للباك:
+// - سطر لكل صنف
+// - سطر لكل إضافة (product_id بتاع الإضافة + size_id بتاع حجمها)، كميتها = كمية الصنف
+// - نفس الإضافة والحجم بيتجمعوا في سطر واحد
+export function buildOrderItems(items: CartItem[], lang: 'ar' | 'en'): OrderLine[] {
+  const mainLines: OrderLine[] = items.map((item) => ({
+    product_id: Number(item.menuItemId),
+    size_id: item.sizeId ?? null,
+    quantity: item.quantity,
+  }))
+
+  const extraLines = new Map<string, OrderLine>()
+
+  for (const item of items) {
+    for (const extra of item.selectedExtras ?? []) {
+      const productId = Number(extra.id)
+      const sizeId = extra.sizeId != null ? Number(extra.sizeId) : null
+      const needsSize = Boolean(extra.sizeLabel)
+
+      if (!Number.isFinite(productId) || (needsSize && (sizeId === null || !Number.isFinite(sizeId)))) {
+        throw new InvalidExtrasError(INVALID_EXTRAS_MESSAGE[lang])
+      }
+
+      const key = `${productId}:${sizeId ?? 'null'}`
+      const existing = extraLines.get(key)
+      if (existing) existing.quantity += item.quantity
+      else extraLines.set(key, { product_id: productId, size_id: sizeId, quantity: item.quantity })
+    }
   }
+
+  return [...mainLines, ...Array.from(extraLines.values())]
 }

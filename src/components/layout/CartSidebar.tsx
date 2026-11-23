@@ -10,7 +10,7 @@ import CheckoutModal from './CheckoutModal'
 import { CheckoutFormData } from '@/lib/schemas'
 import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { toast } from '@/lib/toast'
-import { assertOrderPricingVerified, EXTRAS_CHECKOUT_MESSAGE, UnverifiedExtrasError } from '@/lib/orderSafety'
+import { buildOrderItems, InvalidExtrasError } from '@/lib/orderSafety'
 
 const WA_NUMBER = toWaNumber(restaurantData.contact.whatsapp)
 
@@ -21,12 +21,12 @@ export default function CartSidebar() {
     buildWhatsAppMessage, buildExtrasNote, emptyCart,
   } = useCart()
   const { t, lang } = useLang()
-  const hasUnverifiedExtras = items.some((item) => (item.selectedExtras?.length ?? 0) > 0)
   const router = useRouter()
   const currency = t('currency')
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
 
   const buildPayload = (data: CheckoutFormData): CreateOrderPayload => {
+    // الإضافات بتتبعت كسطور في items، والنص ده بس عشان المطبخ يشوف تبعية كل إضافة
     const extrasNote = buildExtrasNote()
     const notes = [
       data.notes?.trim(),
@@ -40,11 +40,7 @@ export default function CartSidebar() {
       customerPhone: data.customerPhone,
       order_type: data.order_type,
       notes: notes || undefined,
-      items: items.map((item) => ({
-        product_id: Number(item.menuItemId),
-        size_id: item.sizeId ?? null,
-        quantity: item.quantity,
-      })),
+      items: buildOrderItems(items, lang),
     }
 
     if (data.order_type === 'delivery') {
@@ -69,12 +65,8 @@ export default function CartSidebar() {
   }
 
   const orderMutation = useMutation({
-    mutationFn: (data: CheckoutFormData) => {
-      assertOrderPricingVerified(items, lang)
-      return orderApi.create(buildPayload(data))
-    },
+    mutationFn: (data: CheckoutFormData) => orderApi.create(buildPayload(data)),
 
-    // ← هنا: لما الطلب ينجح
     onSuccess: (_res, data) => {
       toast.orderSuccess(
         data.order_type === 'delivery'
@@ -88,8 +80,10 @@ export default function CartSidebar() {
     },
 
     onError: (error: any, data) => {
-      if (error instanceof UnverifiedExtrasError) {
+      // إضافة بياناتها ناقصة: منبعتش حاجة للباك ومنحوّلش لواتساب، والسلة زي ما هي
+      if (error instanceof InvalidExtrasError) {
         toast.error(error.message)
+        setIsCheckoutModalOpen(false)
         return
       }
       toast.error(error?.response?.data?.message ?? t('cart.toast.failed'))
@@ -99,10 +93,6 @@ export default function CartSidebar() {
 
   const handleCheckout = () => {
     if (items.length === 0) return
-    if (hasUnverifiedExtras) {
-      toast.error(EXTRAS_CHECKOUT_MESSAGE[lang])
-      return
-    }
     setIsCheckoutModalOpen(true)
   }
 
@@ -164,11 +154,6 @@ export default function CartSidebar() {
         </div>
 
         <div className="cart-footer">
-          {hasUnverifiedExtras && (
-            <p role="alert" style={{ padding: '0.75rem', fontSize: '0.9rem', color: 'var(--gold)' }}>
-              {EXTRAS_CHECKOUT_MESSAGE[lang]}
-            </p>
-          )}
           <div className="cart-total">
             <span>{t('cart.total')}</span>
             <span id="cartTotal">{total.toFixed(2)} {currency}</span>
