@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MenuItem, MenuItemSize, Extra } from "@/types";
+import { MenuItem, MenuItemSize, Extra, SelectedExtra } from "@/types";
 import { extraApi } from "@/lib/api";
 import { useLang, type DictKey } from "@/lib/i18n";
 
 interface Props {
   item: MenuItem | null;
   onClose: () => void;
-  onAdd: (item: MenuItem, size: MenuItemSize, extras: Extra[]) => void;
+  onAdd: (item: MenuItem, size: MenuItemSize, extras: SelectedExtra[]) => void;
 }
 
 export default function SizeModal({ item, onClose, onAdd }: Props) {
@@ -22,10 +22,10 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
   };
 
   const [selected, setSelected] = useState<MenuItemSize | null>(null);
-  const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
 
   const { data: extras = [] } = useQuery<Extra[]>({
-    queryKey: ["extras"],
+    queryKey: ["extras", "available"],
     queryFn: async () => {
       const res = await extraApi.getAll();
       return res.filter((e: Extra) => !e.isDeleted && e.isAvailableAlone);
@@ -39,12 +39,18 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
 
   if (!item) return null;
 
-  const toggleExtra = (extra: Extra) => {
-    setSelectedExtras((prev) =>
-      prev.find((e) => e.id === extra.id)
-        ? prev.filter((e) => e.id !== extra.id)
-        : [...prev, extra],
-    );
+  // إكسترا من غير أحجام: تشغيل/إيقاف. إكسترا بأحجام: كل حجم صف، واختيار حجم بيبدّل الحجم القديم.
+  const toggleExtra = (extra: Extra, size?: { id?: string | number; size_name: string; price: number }) => {
+    setSelectedExtras((prev) => {
+      const current = prev.find((e) => e.id === extra.id);
+      const without = prev.filter((e) => e.id !== extra.id);
+      if (!size) return current ? without : [...prev, { ...extra }];
+      if (current && current.sizeLabel === size.size_name) return without;
+      return [
+        ...without,
+        { ...extra, price: size.price, sizeLabel: size.size_name, sizeId: size.id ?? null },
+      ];
+    });
   };
 
   const handleAdd = () => {
@@ -72,7 +78,7 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
         }}
       >
         {/* Header */}
-        <div className="size-modal-header">
+        <div className="size-modal-header" style={{ paddingInline: "1rem" }}>
           <h3>{item.name}</h3>
           <button className="size-modal-close" onClick={onClose}>
             <i className="fa-solid fa-xmark" />
@@ -106,6 +112,7 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
               <p
                 style={{
                   margin: "1rem 0 0.5rem",
+                  paddingInline: "1rem",
                   fontWeight: 600,
                   color: "var(--gold)",
                 }}
@@ -114,33 +121,46 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
               </p>
 
               {extras.map((extra) => {
-                const isChecked = !!selectedExtras.find(
-                  (e) => e.id === extra.id,
-                );
-                return (
+                const sized = !!extra.hasSizes && !!extra.sizes?.length;
+                const current = selectedExtras.find((e) => e.id === extra.id);
+                const rows = sized
+                  ? extra.sizes!.map((sz) => ({
+                      key: `${extra.id}-${sz.size_name}`,
+                      label: `${extra.name} (${sizeLabel(sz.size_name)})`,
+                      price: sz.price,
+                      checked: current?.sizeLabel === sz.size_name,
+                      onClick: () => toggleExtra(extra, sz),
+                    }))
+                  : [
+                      {
+                        key: String(extra.id),
+                        label: extra.name,
+                        price: extra.price,
+                        checked: !!current,
+                        onClick: () => toggleExtra(extra),
+                      },
+                    ];
+                return rows.map((row) => (
                   <div
-                    key={extra.id}
-                    className={`size-option${isChecked ? " selected" : ""}`}
-                    onClick={() => toggleExtra(extra)}
+                    key={row.key}
+                    className={`size-option${row.checked ? " selected" : ""}`}
+                    onClick={row.onClick}
                     style={{ cursor: "pointer" }}
                   >
                     <span className="size-option-label">
-                      {isChecked && (
+                      {row.checked && (
                         <i
                           className="fa-solid fa-check"
-                          style={{
-                            marginInlineEnd: "0.4rem",
-                            color: "var(--gold)",
-                          }}
+                          style={{ marginInlineEnd: "0.4rem", color: "var(--gold)" }}
                         />
                       )}
-                      {extra.name}
+                      {row.label}
                     </span>
                     <span className="size-option-price">
-                      +{extra.price} {currency}
+                      +{row.price} {currency}
                     </span>
                   </div>
-                );
+                ));
               })}
             </>
           )}
@@ -151,7 +171,7 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                padding: "0.8rem 0",
+                padding: "0.8rem 1rem",
                 borderTop: "1px solid var(--card-border)",
                 marginTop: "0.5rem",
                 fontWeight: 600,

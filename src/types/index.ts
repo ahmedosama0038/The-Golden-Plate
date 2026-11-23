@@ -38,7 +38,7 @@ export interface CartItem {
   quantity: number
   size?: string
   sizeId?: number | null   // 🆕 رقم الحجم اللي الباك محتاجه
-  selectedExtras?: Extra[]
+  selectedExtras?: SelectedExtra[]
 }
 
 // ─── Order ──────────────────────────────────────────────────
@@ -192,18 +192,36 @@ export interface CreateProductDto {
   sizes?:      { size_name: string; price: number }[]  // لو المنتج ليه أحجام
 }
 // ─── Extras (الإضافات الجديدة) ─────────────────────────────────
+// الإكسترا زي المنتج: يا إما سعر واحد، يا إما أحجام وكل حجم بسعره
+export interface ExtraSize {
+  id?: string | number
+  size_name: string
+  price: number
+}
+
 export interface Extra {
   id: string | number
   name: string
-  price: number
+  price: number              // سعر الوحدة لو مفيهاش أحجام
   isAvailableAlone: boolean
-  isDeleted?: boolean        // ← أضف السطر ده
+  isDeleted?: boolean
+  hasSizes?: boolean
+  sizes?: ExtraSize[]        // لو الإكسترا ليها أحجام
   createdAt?: string
+}
+// إكسترا اتحددت للسلة: السعر هو سعر الحجم المختار (لو ليها أحجام)
+export interface SelectedExtra extends Extra {
+  sizeLabel?: string
+  sizeId?: string | number | null
 }
 export interface CreateExtraDto {
   name: string
-  price: number
-  isAvailableAlone: boolean 
+  price: number              // بيتجاهل لو hasSizes = true
+  isAvailableAlone: boolean
+  description?: string
+  imageFile?: File | null
+  hasSizes?: boolean
+  sizes?: { size_name: string; price: number }[]
 }
 
 

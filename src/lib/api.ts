@@ -186,34 +186,81 @@ export const customerApi = {
   },
 }
 
-// ── 7️⃣ الإضافات (Extra) — ريم لسه شغالة عليها ──
+// ── 7️⃣ الإضافات (Extra) ──
+// موديل ريم: الإكسترا بتتضاف وتتعدل من مسارات المنتجات بالـ id،
+// والإكسترا ممكن يبقى ليها أحجام بأسعار زي المنتج بالظبط.
+// الإكسترا = منتج جوه قسم اسمه "Extra" (أحمد أكد، وظاهر في categories?include_extra=1).
+// بنجيب رقم القسم بالاسم مش برقم ثابت، ولو القسم مش موجود الحفظ بيقف برسالة واضحة.
+const EXTRA_CATEGORY_NAME = 'extra'
+
+export const getExtraCategoryId = async (): Promise<number> => {
+  const response = await api.get('/categories', { params: { include_extra: 1 } })
+  const list = response.data.data || response.data
+  const cat = (Array.isArray(list) ? list : []).find(
+    (c: any) => String(c.name ?? '').trim().toLowerCase() === EXTRA_CATEGORY_NAME
+  )
+  if (!cat) throw new Error('قسم Extra مش موجود في Categories. اعمله الأول وبعدين احفظ الإكسترا.')
+  return Number(cat.id)
+}
+
+// تحويل رد الباك (snake_case) للشكل اللي الواجهة بتقراه
+const mapExtra = (e: any): Extra => {
+  const sizes: { id?: string | number; size_name: string; price: number }[] =
+    Array.isArray(e.sizes)
+      ? e.sizes.map((s: any) => ({ id: s.id, size_name: s.size_name ?? s.name ?? s.label, price: Number(s.price ?? 0) }))
+      : []
+  const hasSizes = Boolean(e.has_sizes ?? e.hasSizes ?? sizes.length > 0)
+  return {
+    ...e,
+    // السعر: لو مفيش أحجام خد base_price/price، لو فيه أحجام خد أقل سعر للعرض
+    price: sizes.length ? Math.min(...sizes.map((s) => s.price)) : Number(e.price ?? e.base_price ?? 0),
+    isAvailableAlone: ![false, 0, '0', 'false'].includes(e.isAvailableAlone ?? e.is_available_alone ?? e.is_active ?? true),
+    isDeleted: e.isDeleted ?? e.is_deleted ?? false,
+    hasSizes,
+    sizes,
+  }
+}
+
+// بناء الفورم داتا بنفس شكل المنتج (لارافيل multipart: sizes[0][size_name] ...)
+const buildExtraFormData = (
+  data: CreateExtraDto,
+  categoryId: number,
+  methodOverride?: 'PUT'
+): FormData => {
+  const fd = new FormData()
+  fd.append('category_id', String(categoryId))
+  fd.append('name', data.name)
+  fd.append('description', data.description?.trim() || data.name)
+  fd.append('is_active', data.isAvailableAlone ? '1' : '0')
+  if (data.imageFile) fd.append('image', data.imageFile)
+  const sizes = data.hasSizes ? (data.sizes ?? []).filter((s) => s.size_name && s.price >= 0) : []
+  if (sizes.length) {
+    sizes.forEach((s, i) => {
+      fd.append(`sizes[${i}][size_name]`, s.size_name)
+      fd.append(`sizes[${i}][price]`, String(s.price))
+    })
+  } else {
+    fd.append('base_price', String(data.price ?? 0))
+  }
+  if (methodOverride) fd.append('_method', methodOverride) // لارافيل مابيقراش multipart مع PUT
+  return fd
+}
+
 export const extraApi = {
     getAll: async (): Promise<Extra[]> => {
     const response = await api.get('/products/extras')
     const list = response.data.data ?? response.data
-    // الحقول بالـ snake_case غالباً، فبنحوّلها للشكل اللي SizeModal بيقراه (تخمين لحد ما نشوف رد حقيقي)
-    return (Array.isArray(list) ? list : []).map((e: any) => ({
-      ...e,
-      price: Number(e.price ?? 0),
-      isAvailableAlone: e.isAvailableAlone ?? e.is_available_alone ?? true,
-      isDeleted: e.isDeleted ?? e.is_deleted ?? e.is_active === false,
-    }))
+    return (Array.isArray(list) ? list : []).map(mapExtra)
   },
+  // إضافة إكسترا: POST /products بـ category_id بتاع قسم Extra
   create: async (data: CreateExtraDto) => {
-    return api.post('/Extra', data)
+    return api.post('/products', buildExtraFormData(data, await getExtraCategoryId()))
   },
-  getAvailable: async (): Promise<Extra[]> => {
-    const response = await api.get('/Extra/AvailableExtras')
-    return response.data.data || response.data
-  },
-  getById: async (id: string | number): Promise<Extra> => {
-    const response = await api.get(`/Extra/${id}`)
-    return response.data.data || response.data
-  },
+  // تعديل إكسترا: نفس مسار المنتج بالـ id
   update: async (id: string | number, data: CreateExtraDto) => {
-    return api.put(`/Extra/${id}`, data)
+    return api.post(`/products/${Number(id)}`, buildExtraFormData(data, await getExtraCategoryId(), 'PUT'))
   },
   delete: async (id: string | number) => {
-    return api.delete(`/Extra/${id}`)
+    return api.delete(`/products/${Number(id)}`)
   },
 }

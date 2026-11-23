@@ -8,7 +8,7 @@ import {
   clearCart, toggleCart, openCart, closeCart,
   selectCartItems, selectCartCount, selectCartTotal, selectCartIsOpen,
 } from '@/store/slices/cartSlice'
-import type { CartItem, MenuItem, MenuItemSize, Extra } from '@/types'
+import type { CartItem, MenuItem, MenuItemSize, SelectedExtra } from '@/types'
 import type { CheckoutFormData } from '@/lib/schemas'
 
 export function useCart() {
@@ -18,13 +18,13 @@ export function useCart() {
   const total    = useAppSelector(selectCartTotal)
   const isOpen   = useAppSelector(selectCartIsOpen)
 
-  const addToCart = (item: MenuItem, selectedSize?: MenuItemSize, selectedExtras?: Extra[]) => {
+  const addToCart = (item: MenuItem, selectedSize?: MenuItemSize, selectedExtras?: SelectedExtra[]) => {
     const extrasTotal = selectedExtras?.reduce((sum, e) => sum + e.price, 0) ?? 0
     const price       = (selectedSize ? selectedSize.price : item.price) + extrasTotal
 
     // الـ id بيتبني من: المنتج + الحجم + الإضافات
     const extrasKey = (selectedExtras ?? [])
-      .map((e) => e.id)
+      .map((e) => `${e.id}${e.sizeLabel ? ':' + e.sizeLabel : ''}`)
       .sort()
       .join('-')
 
@@ -58,7 +58,7 @@ const buildWhatsAppMessage = (
 ) => {
   const lines = items.map((i) => {
     const extras = i.selectedExtras?.length
-      ? ` + ${i.selectedExtras.map((e) => e.name).join(', ')}`
+      ? ` + ${i.selectedExtras.map((e) => e.name + (e.sizeLabel ? ` (${e.sizeLabel})` : '')).join(', ')}`
       : ''
     return `- ${i.name}${i.size ? ` (${i.size})` : ''}${extras} x${i.quantity} = ${(i.price * i.quantity).toFixed(2)} ${currency}`
   })
@@ -100,7 +100,7 @@ const buildExtrasNote = () =>
     .map(
       (i) =>
         `${i.name}${i.size ? ` (${i.size})` : ''}: ${i.selectedExtras!
-          .map((e) => e.name)
+          .map((e) => e.name + (e.sizeLabel ? ` (${e.sizeLabel})` : ''))
           .join(', ')}`
     )
     .join(' | ')

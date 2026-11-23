@@ -10,6 +10,7 @@ import CheckoutModal from './CheckoutModal'
 import { CheckoutFormData } from '@/lib/schemas'
 import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { toast } from '@/lib/toast'
+import { assertOrderPricingVerified, EXTRAS_CHECKOUT_MESSAGE, UnverifiedExtrasError } from '@/lib/orderSafety'
 
 const WA_NUMBER = toWaNumber(restaurantData.contact.whatsapp)
 
@@ -19,7 +20,8 @@ export default function CartSidebar() {
     removeFromCart, changeQuantity,
     buildWhatsAppMessage, buildExtrasNote, emptyCart,
   } = useCart()
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const hasUnverifiedExtras = items.some((item) => (item.selectedExtras?.length ?? 0) > 0)
   const router = useRouter()
   const currency = t('currency')
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
@@ -67,7 +69,10 @@ export default function CartSidebar() {
   }
 
   const orderMutation = useMutation({
-    mutationFn: (data: CheckoutFormData) => orderApi.create(buildPayload(data)),
+    mutationFn: (data: CheckoutFormData) => {
+      assertOrderPricingVerified(items, lang)
+      return orderApi.create(buildPayload(data))
+    },
 
     // ← هنا: لما الطلب ينجح
     onSuccess: (_res, data) => {
@@ -83,7 +88,10 @@ export default function CartSidebar() {
     },
 
     onError: (error: any, data) => {
-      console.error('Order failed, falling back to WhatsApp:', error?.response?.data ?? error)
+      if (error instanceof UnverifiedExtrasError) {
+        toast.error(error.message)
+        return
+      }
       toast.error(error?.response?.data?.message ?? t('cart.toast.failed'))
       finishOrder(data)
     },
@@ -91,6 +99,10 @@ export default function CartSidebar() {
 
   const handleCheckout = () => {
     if (items.length === 0) return
+    if (hasUnverifiedExtras) {
+      toast.error(EXTRAS_CHECKOUT_MESSAGE[lang])
+      return
+    }
     setIsCheckoutModalOpen(true)
   }
 
@@ -129,7 +141,7 @@ export default function CartSidebar() {
                     {item.size && <span className="size-tag">{item.size}</span>}
                     {item.selectedExtras && item.selectedExtras.length > 0 && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                        + {item.selectedExtras.map((e) => e.name).join(', ')}
+                        + {item.selectedExtras.map((e) => e.name + (e.sizeLabel ? ` (${e.sizeLabel})` : '')).join(', ')}
                       </div>
                     )}
                   </div>
@@ -152,6 +164,11 @@ export default function CartSidebar() {
         </div>
 
         <div className="cart-footer">
+          {hasUnverifiedExtras && (
+            <p role="alert" style={{ padding: '0.75rem', fontSize: '0.9rem', color: 'var(--gold)' }}>
+              {EXTRAS_CHECKOUT_MESSAGE[lang]}
+            </p>
+          )}
           <div className="cart-total">
             <span>{t('cart.total')}</span>
             <span id="cartTotal">{total.toFixed(2)} {currency}</span>

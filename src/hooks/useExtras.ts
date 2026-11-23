@@ -18,7 +18,10 @@ export const useExtras = () => {
   const useGetAvailableExtras = () => {
     return useQuery({
       queryKey: ['extras', 'available'],
-      queryFn: extraApi.getAvailable,
+      queryFn: async () => {
+        const all = await extraApi.getAll();
+        return all.filter((e) => !e.isDeleted && e.isAvailableAlone);
+      },
     });
   };
 
