@@ -44,23 +44,32 @@ export const productApi = {
     data.append('_method', 'PUT')
     return api.post(`/products/${id}`, data)
   },
-  // إظهار/إخفاء المنتج: لارافيل بيطلب category_id وname (وbase_price لو من غير أحجام)
-     setActive: (item: any, active: boolean) => {
-    const hasSizes = Array.isArray(item.sizes) && item.sizes.length > 0
-
-    // تعديل المنتج بأحجام محتاج sizes، ومش عارفين ريم بتستبدل ولا بتضيف
-    if (hasSizes) {
-      return Promise.reject(
-        new Error('Hiding dishes with sizes needs a backend update (ask Reem for PATCH /products/{id}/status)')
-      )
-    }
-
+    setActive: (item: any, active: boolean) => {
     const fd = new FormData()
+    const nameEn = item.name_en || item.name
+    // مؤقت: name_ar فاضي عند أغلب المنتجات والباك بيطلبه. بنستخدم الاسم الإنجليزي
+    // مكانه، ودي بتكتب فعلاً في الداتا لو كان فاضي
+    const nameAr = item.name_ar || nameEn
+
     fd.append('name', item.name)
+    fd.append('name_en', nameEn)
+    fd.append('name_ar', nameAr)
     fd.append('category_id', String(item.category_id))
     fd.append('description', item.description ?? '')
-    fd.append('base_price', String(item.base_price ?? 0))
+    if (item.description_en) fd.append('description_en', item.description_en)
+    if (item.description_ar) fd.append('description_ar', item.description_ar)
     fd.append('is_active', active ? '1' : '0')
+
+    const sizes = Array.isArray(item.sizes) ? item.sizes : []
+    if (sizes.length > 0) {
+      sizes.forEach((s: any, i: number) => {
+        fd.append(`sizes[${i}][size_name]`, String(s.size_name ?? s.label ?? s.name))
+        fd.append(`sizes[${i}][price]`, String(s.price))
+      })
+    } else {
+      fd.append('base_price', String(item.base_price ?? 0))
+    }
+
     fd.append('_method', 'PUT')
     return api.post(`/products/${item.id}`, fd)
   },
@@ -229,8 +238,14 @@ const buildExtraFormData = (
 ): FormData => {
   const fd = new FormData()
   fd.append('category_id', String(categoryId))
-  fd.append('name', data.name)
-  fd.append('description', data.description?.trim() || data.name)
+    const nameEn = data.name.trim()
+  const desc = data.description?.trim() || nameEn
+  fd.append('name', nameEn)
+  fd.append('name_en', nameEn)
+  // الباك بيرفض name_ar الفاضي، فبنستخدم الاسم الإنجليزي (مفيش حقل عربي في فورم الإكسترا لسه)
+  fd.append('name_ar', nameEn)
+  fd.append('description', desc)
+  fd.append('description_en', desc)
   fd.append('is_active', data.isAvailableAlone ? '1' : '0')
   if (data.imageFile) fd.append('image', data.imageFile)
   const sizes = data.hasSizes ? (data.sizes ?? []).filter((s) => s.size_name && s.price >= 0) : []
