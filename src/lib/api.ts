@@ -213,7 +213,7 @@ export const getExtraCategoryId = async (): Promise<number> => {
 }
 
 // تحويل رد الباك (snake_case) للشكل اللي الواجهة بتقراه
-const mapExtra = (e: any): Extra => {
+export const mapExtra = (e: any): Extra => {
   const sizes: { id?: string | number; size_name: string; price: number }[] =
     Array.isArray(e.sizes)
       ? e.sizes.map((s: any) => ({ id: s.id, size_name: s.size_name ?? s.name ?? s.label, price: Number(s.price ?? 0) }))

@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { productApi, categoryApi } from '@/lib/api'
+import { productApi, categoryApi, mapExtra } from '@/lib/api'
+import { pickLocalized } from '@/lib/localized'
 import type { MenuItem, MenuItemSize, Category, Extra } from '@/types'
 import { useCart } from '@/hooks/useCart'
 import { useAnimate } from '@/hooks/useAnimate'
@@ -14,7 +15,7 @@ import SizeModal from '@/components/menu/SizeModal'
 
 export default function MenuPage() {
   useAnimate()
-  const { t } = useLang()
+  const { t, lang } = useLang()
 
   const [activeCategory, setActiveCategory] = useState<number | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -49,10 +50,10 @@ export default function MenuPage() {
     error,
   } = useQuery<MenuItem[]>({
     queryKey: ['products'],
-       queryFn: () => productApi.getActive(),
+    queryFn: () => productApi.getActive(),
   })
 
-  // ── تظبيط البيانات والأسعار والصور ──
+  // ── تظبيط البيانات والأسعار والصور والإضافات والأسماء ──
   const mappedProducts = useMemo(() => {
     return products
       .filter((item) => (item as any).is_active !== false)
@@ -95,16 +96,24 @@ export default function MenuPage() {
           itemAny.categoryId ??
           (typeof itemAny.category === 'object' ? itemAny.category?.id : itemAny.category)
 
+        // 5️⃣ إضافات المنتج نفسه (راجعة جوا المنتج)، من غير المخفية، بأسماء حسب اللغة
+        const extras = (Array.isArray(itemAny.extras) ? itemAny.extras : [])
+          .map((raw: any) => ({ ...mapExtra(raw), name: pickLocalized(raw, 'name', lang) }))
+          .filter((e: Extra) => e.isAvailableAlone && !e.isDeleted)
+
         return {
           ...item,
+          name: pickLocalized(itemAny, 'name', lang),
+          description: pickLocalized(itemAny, 'description', lang),
           image: dynamicSrc,
           imageUrl: dynamicSrc,
           price: finalPrice,
           sizes,
           categoryId,
+          extras,
         }
       })
-  }, [products, localImages])
+  }, [products, localImages, lang])
 
   // ── فلتر القسم ──
   const categoryFiltered = useMemo(() => {
@@ -124,15 +133,18 @@ export default function MenuPage() {
     )
   }, [categoryFiltered, searchQuery])
 
+  // منتج بأحجام أو بإضافات بيفتح المودال، وغير كده بيتضاف مباشرة
   const handleAdd = (item: MenuItem) => {
-    if (item.sizes && item.sizes.length > 0) {
+    const hasSizes = !!item.sizes && item.sizes.length > 0
+    const hasExtras = !!item.extras && item.extras.length > 0
+    if (hasSizes || hasExtras) {
       setModalItem(item)
     } else {
       addToCart(item)
     }
   }
 
-  const handleSizeAdd = (item: MenuItem, size: MenuItemSize, extras: Extra[]) => {
+  const handleSizeAdd = (item: MenuItem, size: MenuItemSize | undefined, extras: Extra[]) => {
     addToCart(item, size, extras)
   }
 

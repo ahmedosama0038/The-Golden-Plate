@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { MenuItem, MenuItemSize, Extra, SelectedExtra } from "@/types";
-import { extraApi } from "@/lib/api";
 import { useLang, type DictKey } from "@/lib/i18n";
 
 interface Props {
   item: MenuItem | null;
   onClose: () => void;
-  onAdd: (item: MenuItem, size: MenuItemSize, extras: SelectedExtra[]) => void;
+  onAdd: (item: MenuItem, size: MenuItemSize | undefined, extras: SelectedExtra[]) => void;
 }
 
 export default function SizeModal({ item, onClose, onAdd }: Props) {
@@ -24,20 +22,17 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
   const [selected, setSelected] = useState<MenuItemSize | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
 
-  const { data: extras = [] } = useQuery<Extra[]>({
-    queryKey: ["extras", "available"],
-    queryFn: async () => {
-      const res = await extraApi.getAll();
-      return res.filter((e: Extra) => !e.isDeleted && e.isAvailableAlone);
-    },
-  });
-
   useEffect(() => {
     setSelected(null);
     setSelectedExtras([]);
   }, [item]);
 
   if (!item) return null;
+
+  // إضافات المنتج نفسه (اتفلترت في الصفحة)
+  const extras: Extra[] = item.extras ?? [];
+  const hasSizes = !!item.sizes && item.sizes.length > 0;
+  const canAdd = !hasSizes || !!selected;
 
   // إكسترا من غير أحجام: تشغيل/إيقاف. إكسترا بأحجام: كل حجم صف، واختيار حجم بيبدّل الحجم القديم.
   const toggleExtra = (extra: Extra, size?: { id?: string | number; size_name: string; price: number }) => {
@@ -54,15 +49,15 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
   };
 
   const handleAdd = () => {
-    if (!selected) return;
-    onAdd(item, selected, selectedExtras);
+    if (!canAdd) return;
+    onAdd(item, selected ?? undefined, selectedExtras);
     setSelected(null);
     setSelectedExtras([]);
     onClose();
   };
 
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price, 0);
-  const total = (selected?.price ?? 0) + extrasTotal;
+  const total = (selected?.price ?? item.price ?? 0) + extrasTotal;
 
   return (
     <div
@@ -166,7 +161,7 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
           )}
 
           {/* السعر الكلي */}
-          {selected && (
+          {canAdd && (
             <div
               style={{
                 display: "flex",
@@ -190,7 +185,7 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
         <div style={{ padding: "1rem" }}>
           <button
             className="size-modal-add"
-            disabled={!selected}
+            disabled={!canAdd}
             onClick={handleAdd}
             style={{
               width: "100%",
@@ -200,8 +195,8 @@ export default function SizeModal({ item, onClose, onAdd }: Props) {
               border: "none",
               borderRadius: "8px",
               fontWeight: 700,
-              cursor: selected ? "pointer" : "not-allowed",
-              opacity: selected ? 1 : 0.5,
+              cursor: canAdd ? "pointer" : "not-allowed",
+              opacity: canAdd ? 1 : 0.5,
             }}
           >
             {t("menu.addToOrder")}
