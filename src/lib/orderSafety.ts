@@ -1,6 +1,13 @@
 import type { CartItem } from '@/types'
 
-export type OrderLine = { product_id: number; size_id: number | null; quantity: number }
+export type OrderExtra = { id: number; size_id: number | null }
+
+export type OrderLine = {
+  product_id: number
+  size_id: number | null
+  quantity: number
+  extras?: OrderExtra[]
+}
 
 export const INVALID_EXTRAS_MESSAGE = {
   ar: 'في إضافة في السلة بياناتها ناقصة. شيلها وضيفها تاني من المنيو.',
@@ -15,34 +22,33 @@ export class InvalidExtrasError extends Error {
 }
 
 // بيحوّل السلة لسطور items للباك:
-// - سطر لكل صنف
-// - سطر لكل إضافة (product_id بتاع الإضافة + size_id بتاع حجمها)، كميتها = كمية الصنف
-// - نفس الإضافة والحجم بيتجمعوا في سطر واحد
+// - سطر لكل صنف في السلة
+// - إضافات الصنف جواه في extras: [{ id, size_id }]
+// - الباك هو اللي بيسعّر الإضافة لكل وحدة، فمنضربش الكمية بإيدينا
+// - الإضافة من غير أحجام بتتبعت size_id: null
 export function buildOrderItems(items: CartItem[], lang: 'ar' | 'en'): OrderLine[] {
-  const mainLines: OrderLine[] = items.map((item) => ({
-    product_id: Number(item.menuItemId),
-    size_id: item.sizeId ?? null,
-    quantity: item.quantity,
-  }))
+  return items.map((item) => {
+    const line: OrderLine = {
+      product_id: Number(item.menuItemId),
+      size_id: item.sizeId ?? null,
+      quantity: item.quantity,
+    }
 
-  const extraLines = new Map<string, OrderLine>()
+    const extras = new Map<string, OrderExtra>()
 
-  for (const item of items) {
     for (const extra of item.selectedExtras ?? []) {
-      const productId = Number(extra.id)
+      const id = Number(extra.id)
       const sizeId = extra.sizeId != null ? Number(extra.sizeId) : null
       const needsSize = Boolean(extra.sizeLabel)
 
-      if (!Number.isFinite(productId) || (needsSize && (sizeId === null || !Number.isFinite(sizeId)))) {
+      if (!Number.isFinite(id) || (needsSize && (sizeId === null || !Number.isFinite(sizeId)))) {
         throw new InvalidExtrasError(INVALID_EXTRAS_MESSAGE[lang])
       }
 
-      const key = `${productId}:${sizeId ?? 'null'}`
-      const existing = extraLines.get(key)
-      if (existing) existing.quantity += item.quantity
-      else extraLines.set(key, { product_id: productId, size_id: sizeId, quantity: item.quantity })
+      extras.set(`${id}:${sizeId ?? 'null'}`, { id, size_id: sizeId })
     }
-  }
 
-  return [...mainLines, ...Array.from(extraLines.values())]
+    if (extras.size > 0) line.extras = Array.from(extras.values())
+    return line
+  })
 }
