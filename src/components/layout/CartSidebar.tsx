@@ -18,7 +18,7 @@ export default function CartSidebar() {
   const {
     items, total, isOpen, close,
     removeFromCart, changeQuantity,
-    buildWhatsAppMessage, buildExtrasNote, emptyCart,
+    buildWhatsAppMessage, emptyCart,
   } = useCart()
   const { t, lang } = useLang()
   const router = useRouter()
@@ -26,20 +26,12 @@ export default function CartSidebar() {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
 
   const buildPayload = (data: CheckoutFormData): CreateOrderPayload => {
-    // الإضافات بتتبعت كسطور في items، والنص ده بس عشان المطبخ يشوف تبعية كل إضافة
-    const extrasNote = buildExtrasNote()
-    const notes = [
-      data.notes?.trim(),
-      extrasNote ? `الإضافات: ${extrasNote}` : '',
-    ]
-      .filter(Boolean)
-      .join(' | ')
-
+    // الإضافات بتتبعت جوا الصنف نفسه (extras: [{ id, size_id }])، فمفيش سطر إضافات في notes
     const base = {
       customerName: data.customerName.trim(),
       customerPhone: data.customerPhone,
       order_type: data.order_type,
-      notes: notes || undefined,
+      notes: data.notes?.trim() || undefined,
       items: buildOrderItems(items, lang),
     }
 

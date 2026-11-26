@@ -148,12 +148,19 @@ export default function OrdersPage() {
                       {order.address ?? '—'}
                     </td>
                     <td style={{ color: 'var(--adm-muted)', maxWidth: '240px' }}>
-                      {order.items.map((i) => (
-                        <div key={i.id}>
-                          {i.product_name}
-                          {i.size_name ? ` (${i.size_name})` : ''} x{i.quantity}
-                        </div>
-                      ))}
+                     {order.items.map((i) => (
+  <div key={i.id}>
+    {i.product_name}
+    {i.size_name ? ` (${i.size_name})` : ''} x{i.quantity}
+    {i.extras && i.extras.length > 0 && (
+      <div style={{ fontSize: '0.72rem', opacity: 0.8, paddingInlineStart: '0.6rem' }}>
+        + {i.extras
+          .map((e) => e.name + (e.size_name ? ` (${e.size_name})` : ''))
+          .join(', ')}
+      </div>
+    )}
+  </div>
+))}
                       {order.notes && (
                         <div style={{ fontSize: '0.72rem', marginTop: '0.3rem', opacity: 0.8 }}>
                           📝 {order.notes}

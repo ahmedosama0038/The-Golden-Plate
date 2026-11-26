@@ -1,4 +1,3 @@
-// ============================================================
 //  admin/reservations/page.tsx — حجوزات الطاولات (من باك )
 // ============================================================
 'use client'
@@ -159,6 +158,13 @@ export default function ReservationsPage() {
                             <div key={i.id}>
                               {i.product_name}
                               {i.size_name ? ` (${i.size_name})` : ''} x{i.quantity}
+                              {i.extras && i.extras.length > 0 && (
+                                <div style={{ fontSize: '0.72rem', opacity: 0.8, paddingInlineStart: '0.6rem' }}>
+                                  + {i.extras
+                                    .map((e) => e.name + (e.size_name ? ` (${e.size_name})` : ''))
+                                    .join(', ')}
+                                </div>
+                              )}
                             </div>
                           ))}
                           <div style={{ marginTop: '0.25rem', fontWeight: 600 }}>
