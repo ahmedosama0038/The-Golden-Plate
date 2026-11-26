@@ -239,6 +239,14 @@ export type ApiOrderStatus =
   | 'cancelled'
   | 'completed'
 
+export interface ApiOrderItemExtra {
+  id: number
+  name: string
+  size_id: number | null
+  size_name: string | null
+  price: number
+}
+
 export interface ApiOrderItem {
   id: number
   product_name: string
@@ -246,6 +254,7 @@ export interface ApiOrderItem {
   quantity: number
   unit_price: number
   subtotal: number
+  extras?: ApiOrderItemExtra[]
 }
 
 export interface ApiOrder {

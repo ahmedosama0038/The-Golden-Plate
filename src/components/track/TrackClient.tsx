@@ -58,18 +58,25 @@ function OrderCard({ order }: { order: ApiOrder }) {
       )}
 
       <ul className="trk-items">
-        {order.items.map((it) => (
-          <li key={it.id}>
-            {it.product_name}
-            {it.size_name ? ` (${it.size_name})` : ''} × {it.quantity}
-          </li>
-        ))}
-        {order.order_type === 'reservation' && order.number_of_guests && (
-          <li>
-            {order.number_of_guests} {t('trk.guests')} — {order.date_only} {order.time_only?.slice(0, 5)}
-          </li>
-        )}
-      </ul>
+  {order.items.map((it) => (
+    <li key={it.id}>
+      {it.product_name}
+      {it.size_name ? ` (${it.size_name})` : ''} × {it.quantity}
+      {it.extras && it.extras.length > 0 && (
+        <div className="trk-extras">
+          + {it.extras
+            .map((e) => e.name + (e.size_name ? ` (${e.size_name})` : ''))
+            .join(', ')}
+        </div>
+      )}
+    </li>
+  ))}
+  {order.order_type === 'reservation' && order.number_of_guests && (
+    <li>
+      {order.number_of_guests} {t('trk.guests')} — {order.date_only} {order.time_only?.slice(0, 5)}
+    </li>
+  )}
+</ul>
 
       {order.items.length > 0 && (
         <div className="trk-total">
