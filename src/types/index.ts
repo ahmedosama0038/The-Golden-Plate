@@ -206,10 +206,11 @@ export interface ExtraSize {
   size_name: string
   price: number
 }
-
 export interface Extra {
   id: string | number
   name: string
+  description?: string | null
+  image?: string | null
   price: number              // سعر الوحدة لو مفيهاش أحجام
   isAvailableAlone: boolean
   isDeleted?: boolean
@@ -287,4 +288,31 @@ export interface ApiOrder {
   notes: string | null
   items: ApiOrderItem[]
   created_at: string
+}
+
+// ─── Products (شكل الحقيقي من GET /products) ────────────
+export interface ApiProductSize {
+  id: number
+  size_name: string
+  price: number
+}
+
+export interface ApiProductBase {
+  id: number
+  category_id: number
+  name: string                    // بيتغير حسب Accept-Language وممكن يبقى ""
+  description: string | null
+  name_en: string | null
+  name_ar: string | null
+  description_en: string | null
+  description_ar: string | null
+  base_price: number
+  image: string | null
+  is_active: boolean
+  has_sizes: boolean
+  sizes: ApiProductSize[]
+}
+
+export interface ApiProduct extends ApiProductBase {
+  extras?: ApiProductBase[]       // إضافات المنتج (هي نفسها منتجات)
 }

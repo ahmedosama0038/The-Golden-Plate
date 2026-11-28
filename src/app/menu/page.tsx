@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { productApi, categoryApi, mapExtra } from '@/lib/api'
 import { pickLocalized } from '@/lib/localized'
-import type { MenuItem, MenuItemSize, Category, Extra } from '@/types'
+import type { MenuItem, MenuItemSize, Category, Extra, ApiProduct } from '@/types'
 import { useCart } from '@/hooks/useCart'
 import { useAnimate } from '@/hooks/useAnimate'
 import { useLang } from '@/lib/i18n'
@@ -12,6 +12,8 @@ import CategoryNav from '@/components/menu/CategoryNav'
 import SearchBar from '@/components/menu/SearchBar'
 import MenuList from '@/components/menu/MenuList'
 import SizeModal from '@/components/menu/SizeModal'
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop'
 
 export default function MenuPage() {
   useAnimate()
@@ -48,7 +50,7 @@ export default function MenuPage() {
     isLoading: productsLoading,
     isError,
     error,
-  } = useQuery<MenuItem[]>({
+  } = useQuery<ApiProduct[]>({
     queryKey: ['products'],
     queryFn: () => productApi.getActive(),
   })
@@ -56,60 +58,43 @@ export default function MenuPage() {
   // ── تظبيط البيانات والأسعار والصور والإضافات والأسماء ──
   const mappedProducts = useMemo(() => {
     return products
-      .filter((item) => (item as any).is_active !== false)
+      .filter((item) => item.is_active !== false)
       .map((item) => {
-        const itemAny = item as any
+        const name = pickLocalized(item, 'name', lang)
 
         // 1️⃣ الصورة: localStorage أو الباك إند أو Unsplash
-        const backendSrc = itemAny.imageUrl || itemAny.image
+        const backendSrc = item.image
         const dynamicSrc =
           localImages[String(item.id)] ||
-          localImages[item.name] ||
-          (backendSrc && typeof backendSrc === 'string' && backendSrc.startsWith('http')
-            ? backendSrc
-            : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop')
+          localImages[name] ||
+          (backendSrc && backendSrc.startsWith('http') ? backendSrc : FALLBACK_IMAGE)
 
-        // 2️⃣ الأحجام: الشكل الجديد (sizes) أو القديم (priceList)
-        const sizes = itemAny.sizes?.length
-          ? itemAny.sizes.map((s: any) => ({
-              id: s.id,
-              label: s.size_name.charAt(0).toUpperCase() + s.size_name.slice(1),
-              price: Number(s.price),
-            }))
-          : (itemAny.priceList?.map((p: any) => ({
-              label:
-                p.size === 1 ? 'Small'
-                : p.size === 2 ? 'Medium'
-                : p.size === 3 ? 'Large'
-                : `Size ${p.size}`,
-              price: p.price,
-            })) ?? [])
+        // 2️⃣ الأحجام
+        const sizes: MenuItemSize[] = (item.sizes ?? []).map((s) => ({
+          id: s.id,
+          label: s.size_name.charAt(0).toUpperCase() + s.size_name.slice(1),
+          price: Number(s.price),
+        }))
 
         // 3️⃣ السعر: أول حجم، أو base_price لو مفيش أحجام
-        const finalPrice = sizes.length > 0
-          ? sizes[0].price
-          : Number(itemAny.base_price ?? itemAny.price ?? 0)
+        const finalPrice = sizes.length > 0 ? sizes[0].price : Number(item.base_price ?? 0)
 
-        // 4️⃣ رقم القسم (من الشكل الجديد أو القديم)
-        const categoryId =
-          itemAny.category_id ??
-          itemAny.categoryId ??
-          (typeof itemAny.category === 'object' ? itemAny.category?.id : itemAny.category)
-
-        // 5️⃣ إضافات المنتج نفسه (راجعة جوا المنتج)، من غير المخفية، بأسماء حسب اللغة
-        const extras = (Array.isArray(itemAny.extras) ? itemAny.extras : [])
-          .map((raw: any) => ({ ...mapExtra(raw), name: pickLocalized(raw, 'name', lang) }))
-          .filter((e: Extra) => e.isAvailableAlone && !e.isDeleted)
+        // 4️⃣ إضافات المنتج نفسه (راجعة جوا المنتج)، من غير المخفية، بأسماء حسب اللغة
+        const extras: Extra[] = (item.extras ?? [])
+          .map((raw) => ({ ...mapExtra(raw), name: pickLocalized(raw, 'name', lang) }))
+          .filter((e) => e.isAvailableAlone && !e.isDeleted)
 
         return {
           ...item,
-          name: pickLocalized(itemAny, 'name', lang),
-          description: pickLocalized(itemAny, 'description', lang),
+          name,
+          description: pickLocalized(item, 'description', lang),
+          category: item.category_id,
+          categoryId: item.category_id,
           image: dynamicSrc,
+          itemImage: dynamicSrc,
           imageUrl: dynamicSrc,
           price: finalPrice,
           sizes,
-          categoryId,
           extras,
         }
       })

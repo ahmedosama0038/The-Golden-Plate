@@ -1,5 +1,5 @@
 /// ─── API Layer ──────────────────────────────────────────────
-import { CreateProductDto, Extra, CreateExtraDto } from '@/types'
+import { CreateProductDto, Extra, ExtraSize, CreateExtraDto, ApiProduct } from '@/types'
 import axios from 'axios'
 import { ReservationData } from './schemas'
 
@@ -11,30 +11,45 @@ export const api = axios.create({
   // عشان لارافيل يرد JSON حتى في الأخطاء
   headers: { Accept: 'application/json' },
 })
+
+// الحقول اللي setActive محتاجاها من المنتج (بتقبل ApiProduct وشكل الأدمن)
+export interface ProductStatusInput {
+  id: number | string
+  name: string
+  name_en?: string | null
+  name_ar?: string | null
+  category_id?: number | string
+  description?: string | null
+  description_en?: string | null
+  description_ar?: string | null
+  base_price?: number | string
+  sizes?: { size_name?: string; price: number | string }[]
+}
+
 // ── 1️⃣ المنتجات (Products) ──
 export const productApi = {
-  getAll: async () => {
+  getAll: async (): Promise<ApiProduct[]> => {
     const response = await api.get('/products')
     return response.data.data
   },
   // المنيو العام: المنتجات الـ active بس
-  getActive: async () => {
+  getActive: async (): Promise<ApiProduct[]> => {
     const response = await api.get('/products', { params: { is_active: 1 } })
     return response.data.data
   },
   // الفلترة من القايمة (ممكن نستخدم ?category_id= و ?name= من ريم بعدين)
   getById: async (id: string) => {
     const all = await productApi.getAll()
-    return all.find((p: any) => String(p.id) === String(id))
+    return all.find((p) => String(p.id) === String(id))
   },
   getByCategory: async (categoryId: string) => {
     const all = await productApi.getAll()
-    return all.filter((p: any) => String(p.category_id) === String(categoryId))
+    return all.filter((p) => String(p.category_id) === String(categoryId))
   },
   search: async (query: string) => {
     const all = await productApi.getAll()
     const q = query.toLowerCase()
-    return all.filter((p: any) => p.name?.toLowerCase().includes(q))
+    return all.filter((p) => p.name?.toLowerCase().includes(q))
   },
 
   create: (data: CreateProductDto | FormData) => api.post('/products', data),
@@ -44,7 +59,8 @@ export const productApi = {
     data.append('_method', 'PUT')
     return api.post(`/products/${id}`, data)
   },
-    setActive: (item: any, active: boolean) => {
+
+  setActive: (item: ProductStatusInput, active: boolean) => {
     const fd = new FormData()
     const nameEn = item.name_en || item.name
     // مؤقت: name_ar فاضي عند أغلب المنتجات والباك بيطلبه. بنستخدم الاسم الإنجليزي
@@ -62,8 +78,8 @@ export const productApi = {
 
     const sizes = Array.isArray(item.sizes) ? item.sizes : []
     if (sizes.length > 0) {
-      sizes.forEach((s: any, i: number) => {
-        fd.append(`sizes[${i}][size_name]`, String(s.size_name ?? s.label ?? s.name))
+      sizes.forEach((s, i) => {
+        fd.append(`sizes[${i}][size_name]`, String(s.size_name))
         fd.append(`sizes[${i}][price]`, String(s.price))
       })
     } else {
@@ -122,7 +138,12 @@ export interface CreateOrderPayload {
   dateOnly?: string // YYYY-MM-DD
   timeOnly?: string // HH:mm:ss
   notes?: string
-  items: { product_id: number; size_id: number | null; quantity: number }[]
+  items: {
+    product_id: number
+    size_id: number | null
+    quantity: number
+    extras?: { id: number; size_id: number | null }[]
+  }[]
 }
 
 export const orderApi = {
@@ -186,7 +207,6 @@ export const reservationApi = {
   },
 }
 
-
 // ── 6️⃣ العملاء (Customer) — من /dashboard/customers ──
 export const customerApi = {
   getAll: async (params?: { name?: string; phone?: string }) => {
@@ -205,25 +225,48 @@ const EXTRA_CATEGORY_NAME = 'extra'
 export const getExtraCategoryId = async (): Promise<number> => {
   const response = await api.get('/categories', { params: { include_extra: 1 } })
   const list = response.data.data || response.data
-  const cat = (Array.isArray(list) ? list : []).find(
-    (c: any) => String(c.name ?? '').trim().toLowerCase() === EXTRA_CATEGORY_NAME
+  const cat = (Array.isArray(list) ? (list as { id: number | string; name?: string }[]) : []).find(
+    (c) => String(c.name ?? '').trim().toLowerCase() === EXTRA_CATEGORY_NAME
   )
   if (!cat) throw new Error('قسم Extra مش موجود في Categories. اعمله الأول وبعدين احفظ الإكسترا.')
   return Number(cat.id)
 }
 
+// شكل الإكسترا الخام من الباك (الحقول اللي mapExtra بتقراها)
+export interface RawExtra {
+  id: number | string
+  name?: string
+  description?: string | null
+  image?: string | null
+  base_price?: number | string
+  price?: number | string
+  has_sizes?: boolean
+  hasSizes?: boolean
+  sizes?: { id?: number | string; size_name?: string; name?: string; label?: string; price?: number | string }[]
+  isAvailableAlone?: unknown
+  is_available_alone?: unknown
+  is_active?: unknown
+  isDeleted?: boolean
+  is_deleted?: boolean
+}
+
 // تحويل رد الباك (snake_case) للشكل اللي الواجهة بتقراه
-export const mapExtra = (e: any): Extra => {
-  const sizes: { id?: string | number; size_name: string; price: number }[] =
-    Array.isArray(e.sizes)
-      ? e.sizes.map((s: any) => ({ id: s.id, size_name: s.size_name ?? s.name ?? s.label, price: Number(s.price ?? 0) }))
-      : []
+export const mapExtra = (e: RawExtra): Extra => {
+  const sizes: ExtraSize[] = Array.isArray(e.sizes)
+    ? e.sizes.map((s) => ({
+        id: s.id,
+        size_name: s.size_name ?? s.name ?? s.label ?? '',
+        price: Number(s.price ?? 0),
+      }))
+    : []
   const hasSizes = Boolean(e.has_sizes ?? e.hasSizes ?? sizes.length > 0)
+  const availableFlag = e.isAvailableAlone ?? e.is_available_alone ?? e.is_active ?? true
   return {
     ...e,
+    name: e.name ?? '',
     // السعر: لو مفيش أحجام خد base_price/price، لو فيه أحجام خد أقل سعر للعرض
     price: sizes.length ? Math.min(...sizes.map((s) => s.price)) : Number(e.price ?? e.base_price ?? 0),
-    isAvailableAlone: ![false, 0, '0', 'false'].includes(e.isAvailableAlone ?? e.is_available_alone ?? e.is_active ?? true),
+    isAvailableAlone: ![false, 0, '0', 'false'].includes(availableFlag as boolean | number | string),
     isDeleted: e.isDeleted ?? e.is_deleted ?? false,
     hasSizes,
     sizes,
@@ -238,7 +281,7 @@ const buildExtraFormData = (
 ): FormData => {
   const fd = new FormData()
   fd.append('category_id', String(categoryId))
-    const nameEn = data.name.trim()
+  const nameEn = data.name.trim()
   const desc = data.description?.trim() || nameEn
   fd.append('name', nameEn)
   fd.append('name_en', nameEn)
@@ -262,10 +305,10 @@ const buildExtraFormData = (
 }
 
 export const extraApi = {
-    getAll: async (): Promise<Extra[]> => {
+  getAll: async (): Promise<Extra[]> => {
     const response = await api.get('/products/extras')
     const list = response.data.data ?? response.data
-    return (Array.isArray(list) ? list : []).map(mapExtra)
+    return (Array.isArray(list) ? (list as RawExtra[]) : []).map(mapExtra)
   },
   // إضافة إكسترا: POST /products بـ category_id بتاع قسم Extra
   create: async (data: CreateExtraDto) => {
