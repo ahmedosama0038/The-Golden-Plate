@@ -4,8 +4,17 @@ import { useState, useEffect } from 'react'
 import TopBar from '@/components/admin/TopBar'
 import { toast } from '@/lib/toast'
 
+interface ContactForm {
+  address: string
+  phone: string
+  email: string
+  whatsapp: string
+  hoursWeekday: string
+  hoursWeekend: string
+}
+
 // البيانات الافتراضية للمطعم في حال لو مفيش حاجة متسجلة في الـ LocalStorage
-const DEFAULT_CONTACT = {
+const DEFAULT_CONTACT: ContactForm = {
   address: '123 Luxury St, New York, NY',
   phone: '+1 212 555 0199',
   email: 'info@goldenplate.com',
@@ -14,8 +23,17 @@ const DEFAULT_CONTACT = {
   hoursWeekend: 'Sat - Sun: 10:00 AM - 11:30 PM',
 }
 
+const FIELDS: { key: keyof ContactForm; label: string }[] = [
+  { key: 'address',      label: 'Address'         },
+  { key: 'phone',        label: 'Phone'           },
+  { key: 'email',        label: 'Email'           },
+  { key: 'whatsapp',     label: 'WhatsApp Number' },
+  { key: 'hoursWeekday', label: 'Weekday Hours'   },
+  { key: 'hoursWeekend', label: 'Weekend Hours'   },
+]
+
 export default function ContactInfoAdminPage() {
-  const [form, setForm] = useState(DEFAULT_CONTACT)
+  const [form, setForm] = useState<ContactForm>(DEFAULT_CONTACT)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -25,7 +43,7 @@ export default function ContactInfoAdminPage() {
       const savedData = localStorage.getItem('restaurant_contact')
       if (savedData) {
         try {
-          setForm(JSON.parse(savedData))
+          setForm(JSON.parse(savedData) as ContactForm)
         } catch (e) {
           console.error("Failed to parse contact data", e)
         }
@@ -35,19 +53,19 @@ export default function ContactInfoAdminPage() {
   }, [])
 
   // دالة لتحديث الحقول أثناء الكتابة
-  const updateField = (field: string, val: string) => {
+  const updateField = (field: keyof ContactForm, val: string) => {
     setForm((p) => ({ ...p, [field]: val }))
   }
 
   // ── 2️⃣ حفظ التعديلات جوه الـ LocalStorage ──
   const handleSave = () => {
     setIsSaving(true)
-    
+
     setTimeout(() => {
       localStorage.setItem('restaurant_contact', JSON.stringify(form))
       setIsSaving(false)
       toast.success('Contact info updated successfully in local storage!')
-    }, 600) // إنيميشن وهمي خفيف عشان يحسس المستخدم بالسرعة والواقعية
+    }, 600)
   }
 
   return (
@@ -63,37 +81,30 @@ export default function ContactInfoAdminPage() {
 
         {!isLoading && (
           <div className="adm-table-wrap" style={{ padding: '1.5rem' }}>
-            {[
-              { key: 'address',      label: 'Address'          },
-              { key: 'phone',        label: 'Phone'            },
-              { key: 'email',        label: 'Email'            },
-              { key: 'whatsapp',     label: 'WhatsApp Number'  },
-              { key: 'hoursWeekday', label: 'Weekday Hours'    },
-              { key: 'hoursWeekend', label: 'Weekend Hours'    },
-            ].map(({ key, label }) => (
+            {FIELDS.map(({ key, label }) => (
               <div key={key} className="adm-form-group" style={{ marginBottom: '1.2rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 500 }}>
                   {label}
                 </label>
-                <input 
-                  value={(form as any)[key]} 
-                  onChange={(e) => updateField(key, e.target.value)} 
+                <input
+                  value={form[key]}
+                  onChange={(e) => updateField(key, e.target.value)}
                   disabled={isSaving}
-                  style={{ 
-                    width: '100%', 
-                    padding: '0.6rem', 
-                    borderRadius: '6px', 
-                    border: '1px solid var(--adm-border)', 
-                    background: 'var(--adm-bg-dark)', 
-                    color: '#fff' 
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--adm-border)',
+                    background: 'var(--adm-bg-dark)',
+                    color: '#fff'
                   }}
                 />
               </div>
             ))}
 
             {/* زرار الحفظ الذكي */}
-            <button 
-              className="adm-btn primary" 
+            <button
+              className="adm-btn primary"
               onClick={handleSave}
               disabled={isSaving}
               style={{ marginTop: '0.5rem' }}

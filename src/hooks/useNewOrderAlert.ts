@@ -11,7 +11,9 @@ const STORAGE_KEY = 'admin_sound_alert'
 // جرس بسيط بالكود (Web Audio) من غير ملف صوت
 function playBell() {
   try {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     const ctx = new Ctx()
     const beep = (freq: number, start: number) => {
       const osc = ctx.createOscillator()

@@ -1,20 +1,25 @@
-
 'use client'
 import { useState } from 'react'
 import TopBar from '@/components/admin/TopBar'
 import { restaurantData } from '@/data/restaurant'
+import type { SiteSettings } from '@/types'
+
+// المفاتيح اللي قيمتها boolean بس (الـ toggles)
+type ToggleKey = {
+  [K in keyof SiteSettings]: SiteSettings[K] extends boolean ? K : never
+}[keyof SiteSettings]
+
+const TOGGLES: { key: ToggleKey; label: string }[] = [
+  { key: 'enableOrdering',     label: 'Enable Online Ordering' },
+  { key: 'enableReservations', label: 'Enable Reservations'    },
+  { key: 'enableWhatsapp',     label: 'Enable WhatsApp Orders' },
+  { key: 'maintenanceMode',    label: 'Maintenance Mode'       },
+]
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState(restaurantData.settings)
+  const [settings, setSettings] = useState<SiteSettings>(restaurantData.settings)
   const [saved, setSaved] = useState(false)
-  const toggle = (key: string) => setSettings((p) => ({ ...p, [key]: !(p as any)[key] }))
-
-  const TOGGLES = [
-    { key: 'enableOrdering',      label: 'Enable Online Ordering'      },
-    { key: 'enableReservations',  label: 'Enable Reservations'         },
-    { key: 'enableWhatsapp',      label: 'Enable WhatsApp Orders'      },
-    { key: 'maintenanceMode',     label: 'Maintenance Mode'            },
-  ]
+  const toggle = (key: ToggleKey) => setSettings((p) => ({ ...p, [key]: !p[key] }))
 
   return (
     <>
@@ -46,13 +51,13 @@ export default function SettingsPage() {
                   onClick={() => toggle(key)}
                   style={{
                     width: '44px', height: '24px', borderRadius: '50px',
-                    background: (settings as any)[key] ? 'var(--adm-green)' : 'var(--adm-border)',
+                    background: settings[key] ? 'var(--adm-green)' : 'var(--adm-border)',
                     border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.3s',
                   }}
                 >
                   <span style={{
                     position: 'absolute', top: '4px',
-                    left: (settings as any)[key] ? '22px' : '4px',
+                    left: settings[key] ? '22px' : '4px',
                     width: '16px', height: '16px', borderRadius: '50%',
                     background: '#fff', transition: 'left 0.3s',
                   }} />
