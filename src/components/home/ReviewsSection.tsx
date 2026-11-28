@@ -6,6 +6,7 @@ import { useAnimate }  from '@/hooks/useAnimate'
 import { useLang }     from '@/lib/i18n'
 import { reviewApi }   from '@/lib/api'
 import ReviewForm      from '@/components/reviews/ReviewForm'
+import type { ApiReview } from '@/types'
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -22,7 +23,7 @@ export default function ReviewsSection() {
   const [success, setSuccess] = useState(false)
   const [formKey, setFormKey] = useState(0)
 
-  const { data: reviewsRaw = [], isLoading } = useQuery<any[]>({
+  const { data: reviewsRaw = [], isLoading } = useQuery<ApiReview[]>({
     queryKey: ['reviews'],
     queryFn:  reviewApi.getAll,
   })
@@ -59,8 +60,7 @@ export default function ReviewsSection() {
               reviews.map((review) => {
                 const rateValue = Math.min(5, Math.max(0, Math.round(Number(review.rating) || 0)))
                 const commentText = review.comment ?? '—'
-                const reviewerName: string =
-                  review.customer?.name ?? review.customer_name ?? review.customerName ?? t('reviews.guest')
+                const reviewerName: string = review.customer_name || t('reviews.guest')
 
                 return (
                   <div key={review.id} className="review-card animate">

@@ -89,7 +89,15 @@ export interface Review {
   status: ReviewStatus
   createdAt: string
 }
-
+// تقييم من الباك (GET /reviews)
+export interface ApiReview {
+  id: number
+  order_id: number
+  customer_name: string
+  rating: number
+  comment: string | null
+  created_at: string
+}
 // ─── Team & Timeline (About page) ───────────────────────────
 export interface TeamMember {
   id: string

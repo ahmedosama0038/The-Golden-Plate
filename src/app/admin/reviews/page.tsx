@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { reviewApi } from '@/lib/api'
 import TopBar from '@/components/admin/TopBar'
 import { toast } from '@/lib/toast'
+import type { ApiReview } from '@/types'
 
-// ريم بتخزن الوقت UTC من غير Z
+//  بتخزن الوقت UTC من غير Z
 const formatDate = (s?: string) => {
   if (!s) return '—'
   const iso = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(s) ? s.replace(' ', 'T') + 'Z' : s
@@ -18,7 +19,7 @@ const formatDate = (s?: string) => {
 export default function ReviewsPage() {
   const queryClient = useQueryClient()
 
-  const { data: reviewsRaw = [], isLoading, isError, error } = useQuery<any[]>({
+  const { data: reviewsRaw = [], isLoading, isError, error } = useQuery<ApiReview[]>({
     queryKey: ['admin-reviews'],
     queryFn: reviewApi.getAll,
     staleTime: 0,
@@ -32,9 +33,9 @@ export default function ReviewsPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-reviews'] })
       toast.success('Review deleted successfully!')
     },
-   onError: (err: unknown) => {
-  toast.error('Failed to delete review', getErrorMessage(err, 'Failed to delete review'))
-},
+    onError: (err: unknown) => {
+      toast.error('Failed to delete review', getErrorMessage(err, 'Failed to delete review'))
+    },
   })
 
   // متوسط التقييم (نفس حسبة الداشبورد)
@@ -86,9 +87,8 @@ export default function ReviewsPage() {
               <tbody>
                 {reviews.map((r) => {
                   const id = r.id
-                  const name = r.customer?.name ?? r.customer_name ?? r.customerName ?? '—'
-                  const phone = r.customer?.phone ?? r.customer_phone ?? r.customerPhone ?? ''
-                  const orderId = r.order_id ?? r.order?.id
+                  const name = r.customer_name || '—'
+                  const orderId = r.order_id
                   const rate = Math.min(5, Math.max(0, Math.round(Number(r.rating) || 0)))
                   const comment = r.comment ?? '—'
 
@@ -97,9 +97,6 @@ export default function ReviewsPage() {
                       <td style={{ color: 'var(--adm-gold)', fontWeight: 600 }}>#{id}</td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{name}</div>
-                        {phone && (
-                          <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted)' }}>{phone}</div>
-                        )}
                       </td>
                       <td style={{ color: 'var(--adm-muted)' }}>
                         {orderId ? `#${orderId}` : '—'}
@@ -122,7 +119,7 @@ export default function ReviewsPage() {
                         &ldquo;{comment}&rdquo;
                       </td>
                       <td style={{ color: 'var(--adm-muted)', fontSize: '0.75rem' }}>
-                        {formatDate(r.created_at ?? r.createdAt)}
+                        {formatDate(r.created_at)}
                       </td>
                       <td>
                         <button

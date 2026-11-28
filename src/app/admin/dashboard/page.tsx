@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import TopBar from '@/components/admin/TopBar'
 import { orderApi, reviewApi } from '@/lib/api'
-import type { ApiOrder } from '@/types'
+import type { ApiOrder, ApiReview } from '@/types'
 
 const CURRENCY = 'ج.م'
 
@@ -36,11 +36,10 @@ export default function DashboardPage() {
     queryFn: orderApi.getAll,
     refetchInterval: 30_000,
   })
-
-  const { data: reviewsRaw = [] } = useQuery<any[]>({
-    queryKey: ['dashboard-reviews'],
-    queryFn: reviewApi.getAll,
-  })
+const { data: reviewsRaw = [] } = useQuery<ApiReview[]>({
+  queryKey: ['dashboard-reviews'],
+  queryFn: reviewApi.getAll,
+})
   const reviews = Array.isArray(reviewsRaw) ? reviewsRaw : []
 
   // ── الأرقام ──
