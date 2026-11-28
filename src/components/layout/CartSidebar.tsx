@@ -11,7 +11,7 @@ import { CheckoutFormData } from '@/lib/schemas'
 import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { toast } from '@/lib/toast'
 import { buildOrderItems, InvalidExtrasError } from '@/lib/orderSafety'
-
+import { getErrorMessage } from '@/lib/errors'
 const WA_NUMBER = toWaNumber(restaurantData.contact.whatsapp)
 
 export default function CartSidebar() {
@@ -71,16 +71,15 @@ export default function CartSidebar() {
       finishOrder(data)
     },
 
-    onError: (error: any, data) => {
-      // إضافة بياناتها ناقصة: منبعتش حاجة للباك ومنحوّلش لواتساب، والسلة زي ما هي
-      if (error instanceof InvalidExtrasError) {
-        toast.error(error.message)
-        setIsCheckoutModalOpen(false)
-        return
-      }
-      toast.error(error?.response?.data?.message ?? t('cart.toast.failed'))
-      finishOrder(data)
-    },
+   onError: (error: unknown, data) => {
+  if (error instanceof InvalidExtrasError) {
+    toast.error(error.message)
+    setIsCheckoutModalOpen(false)
+    return
+  }
+  toast.error(getErrorMessage(error, t('cart.toast.failed')))
+  finishOrder(data)
+},
   })
 
   const handleCheckout = () => {

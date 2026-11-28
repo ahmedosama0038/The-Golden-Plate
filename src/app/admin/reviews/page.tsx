@@ -1,5 +1,5 @@
 'use client'
-
+import { getErrorMessage } from '@/lib/errors'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { reviewApi } from '@/lib/api'
 import TopBar from '@/components/admin/TopBar'
@@ -32,9 +32,9 @@ export default function ReviewsPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-reviews'] })
       toast.success('Review deleted successfully!')
     },
-    onError: (err: any) => {
-      toast.error('Failed to delete review', err?.response?.data?.message || err.message)
-    },
+   onError: (err: unknown) => {
+  toast.error('Failed to delete review', getErrorMessage(err, 'Failed to delete review'))
+},
   })
 
   // متوسط التقييم (نفس حسبة الداشبورد)

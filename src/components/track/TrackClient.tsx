@@ -1,5 +1,5 @@
 'use client'
-
+import { getErrorMessage, getErrorStatus } from '@/lib/errors'
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { orderApi } from '@/lib/api'
@@ -122,12 +122,12 @@ export default function TrackClient() {
     setPhone(input)
   }
 
-  const status = (error as any)?.response?.status
-  const errText = isError
-    ? !status || status >= 500
-      ? t('rv.err.busy')
-      : (error as any)?.response?.data?.message ?? t('rv.err.fetch')
-    : ''
+  const status = getErrorStatus(error)
+const errText = isError
+  ? !status || status >= 500
+    ? t('rv.err.busy')
+    : getErrorMessage(error, t('rv.err.fetch'))
+  : ''
 
   const orders = [...(data ?? [])].sort((a, b) => b.id - a.id)
 

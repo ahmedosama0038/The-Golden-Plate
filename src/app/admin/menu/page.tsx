@@ -3,19 +3,21 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { productApi, categoryApi } from '@/lib/api'
-import type { MenuItem, Category } from '@/types'
+import type { Category } from '@/types'
 import TopBar from '@/components/admin/TopBar'
-import AddProductModal from '@/components/admin/AddProductModal'
+import AddProductModal, { type EditableProduct } from '@/components/admin/AddProductModal'
 import { toast } from '@/lib/toast'
+import { getErrorMessage, getErrorStatus } from '@/lib/errors'
 
 type StatusFilter = 'all' | 'active' | 'inactive'
 
-// أول رسالة خطأ من لارافيل (errors أو message)
-const getApiMessage = (err: any, fallback: string) => {
-  const data = err?.response?.data
-  const firstField = data?.errors ? Object.values(data.errors)[0] : null
-  if (Array.isArray(firstField) && firstField[0]) return String(firstField[0])
-  return data?.message ?? fallback
+// شكل المنتج في جدول الأدمن (الحقول اللي الصفحة بتقراها)
+interface AdminProduct extends EditableProduct {
+  name: string
+  description?: string | null
+  categoryId?: number | string
+  imageUrl?: string | null
+  price?: number | string
 }
 
 export default function AdminMenuPage() {
@@ -25,7 +27,7 @@ export default function AdminMenuPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<any>(null)
+  const [selectedItem, setSelectedItem] = useState<AdminProduct | null>(null)
 
   // 🎯 الخزنة الذكية للصور
   const [localImages, setLocalImages] = useState<Record<string, string>>(() => {
@@ -47,15 +49,15 @@ export default function AdminMenuPage() {
   })
 
   // جلب الـ products
-  const { data: items = [], isLoading } = useQuery<MenuItem[]>({
+  const { data: items = [], isLoading } = useQuery<AdminProduct[]>({
     queryKey: ['admin-products'],
-    queryFn: productApi.getAll,
+    queryFn: async () => (await productApi.getAll()) as unknown as AdminProduct[],
   })
 
   // الـ Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: (id: string | number) => productApi.delete(id),
-    onSuccess: (data, id) => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Item deleted successfully')
@@ -76,28 +78,27 @@ export default function AdminMenuPage() {
 
   // إظهار/إخفاء المنتج
   const activeMutation = useMutation({
-        mutationFn: ({ item, active }: { item: any; active: boolean }) =>
+    mutationFn: ({ item, active }: { item: AdminProduct; active: boolean }) =>
       productApi.setActive(item, active),
     onSuccess: (_res, { active }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success(active ? 'Dish is now visible on the menu' : 'Dish hidden from the menu')
     },
-    onError: (err: any) => {
-      console.error('setActive failed:', err?.response?.status, err?.response?.data ?? err)
-          toast.error('Could not change status', getApiMessage(err, err?.message ?? 'Please try again'))
+    onError: (err: unknown) => {
+      console.error('setActive failed:', getErrorStatus(err), err)
+      toast.error('Could not change status', getErrorMessage(err, 'Please try again'))
     },
   })
 
   // المنتج active ما لم يكن is_active === false صراحةً
-  const isActive = (item: MenuItem) => (item as any).is_active !== false
+  const isActive = (item: AdminProduct) => item.is_active !== false
 
   const activeCount = items.filter(isActive).length
   const inactiveCount = items.length - activeCount
 
   const filtered = items.filter((item) => {
-    const itemAny = item as any
-    const currentCatId = String(itemAny.category_id ?? itemAny.categoryId ?? '')
+    const currentCatId = String(item.category_id ?? item.categoryId ?? '')
 
     const matchCat = filter === 'all' || currentCatId === String(filter)
     const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase())
@@ -195,16 +196,15 @@ export default function AdminMenuPage() {
               </thead>
               <tbody>
                 {filtered.map((item) => {
-                  const itemAny = item as any
                   const active = isActive(item)
 
                   // السعر: أول حجم (الشكل الجديد) أو base_price
-                  const firstSize = itemAny.sizes?.[0]
+                  const firstSize = item.sizes?.[0]
                   const displayPrice = firstSize
                     ? `From ${firstSize.price} ج.م`
-                    : `${itemAny.base_price ?? itemAny.price ?? 0} ج.م`
+                    : `${item.base_price ?? item.price ?? 0} ج.م`
 
-                  const backendSrc = itemAny.imageUrl || itemAny.image
+                  const backendSrc = item.imageUrl || item.image
 
                   const dynamicSrc = localImages[String(item.id)] || localImages[item.name] ||
                     ((backendSrc && typeof backendSrc === 'string' && backendSrc.startsWith('http'))
@@ -212,7 +212,7 @@ export default function AdminMenuPage() {
                       : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200&auto=format&fit=crop')
 
                   const categoryName = categories.find(
-                    (c) => String(c.id) === String(itemAny.category_id ?? itemAny.categoryId)
+                    (c) => String(c.id) === String(item.category_id ?? item.categoryId)
                   )?.name || '—'
 
                   return (
@@ -257,7 +257,7 @@ export default function AdminMenuPage() {
                           <button
                             className="adm-action-btn edit"
                             disabled={activeMutation.isPending}
-                    onClick={() => activeMutation.mutate({ item, active: !active })}
+                            onClick={() => activeMutation.mutate({ item, active: !active })}
                             title={active ? 'Hide from menu' : 'Show on menu'}
                             style={{ color: active ? '#22c55e' : 'var(--adm-muted)' }}
                           >

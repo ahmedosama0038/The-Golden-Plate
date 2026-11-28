@@ -4,9 +4,10 @@ import { useForm }     from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState }    from 'react'
 
-import { orderApi } from '@/lib/api'
+import { orderApi, type CreateOrderPayload } from '@/lib/api'
 import { ReservationFormData, reservationFormSchema } from '@/lib/schemas'
 import { useLang, type DictKey } from '@/lib/i18n'
+import { getErrorMessage, getErrorStatus } from '@/lib/errors'
 
 const TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00',
@@ -18,12 +19,15 @@ const getToday = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-// أول رسالة خطأ من لارافيل (errors أو message)
-const getApiMessage = (err: any, fallback: string) => {
-  const data = err?.response?.data
-  const firstField = data?.errors ? Object.values(data.errors)[0] : null
-  if (Array.isArray(firstField) && firstField[0]) return String(firstField[0])
-  return data?.message ?? fallback
+// حجز من غير items: الباك بيعتبر المصفوفة الفاضية غلط (min:1) لكن الحقل الغايب مقبول
+interface ReservationPayload {
+  customerName:   string
+  customerPhone:  string
+  order_type:     'reservation'
+  numberOfGuests: number
+  dateOnly:       string
+  timeOnly:       string
+  notes?:         string
 }
 
 const errStyle = { color: '#ef4444', fontSize: '0.75rem' }
@@ -53,8 +57,7 @@ export default function ReservationForm() {
       return
     }
     try {
-      // مفيش items: الباك بيعتبر المصفوفة الفاضية غلط (min:1) لكن الحقل الغايب مقبول للحجز
-      const payload: any = {
+      const payload: ReservationPayload = {
         customerName:   data.customerName.trim(),
         customerPhone:  data.customerPhone,
         order_type:     'reservation',
@@ -63,14 +66,15 @@ export default function ReservationForm() {
         timeOnly:       data.timeOnly + ':00',
         notes:          data.notes?.trim() || undefined,
       }
-      await orderApi.create(payload)
+      // CreateOrderPayload بيطلب items غالباً، والحجز من غيرها
+      await orderApi.create(payload as unknown as CreateOrderPayload)
 
       setSuccess(true)
       reset()
       setTimeout(() => setSuccess(false), 6000)
-    } catch (err: any) {
-      console.error('Reservation failed:', err?.response?.status, err?.response?.data ?? err)
-      setApiError(getApiMessage(err, t('res.apiError')))
+    } catch (err: unknown) {
+      console.error('Reservation failed:', getErrorStatus(err), err)
+      setApiError(getErrorMessage(err, t('res.apiError')))
     }
   }
 

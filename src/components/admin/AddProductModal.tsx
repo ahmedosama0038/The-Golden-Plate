@@ -1,15 +1,46 @@
 'use client'
-
+import { getErrorMessage } from '@/lib/errors'
 import { useState }                                 from 'react'
 import { useMutation, useQuery, useQueryClient }    from '@tanstack/react-query'
 import { productApi, extraApi }                     from '@/lib/api'
 import { compressImage }                            from '@/lib/compressImage'
 import type { Category }                            from '@/types'
 
+// شكل المنتج اللي بيجي من الباك وقت التعديل (الحقول اللي الفورم بتستخدمها بس)
+interface EditableSize  { size_name: string; price: number | string }
+interface EditableExtra { id: number | string }
+export interface EditableProduct {
+  id: number | string
+  name?: string
+  name_en?: string
+  name_ar?: string
+  description?: string | null
+  description_en?: string | null
+  description_ar?: string | null
+  category_id?: number | string
+  has_sizes?: boolean
+  base_price?: number | string
+  sizes?: EditableSize[]
+  extras?: EditableExtra[]
+  image?: string | null
+  is_active?: boolean
+}
+
+// شكل الإضافة في قايمة الاختيار
+interface ExtraOption {
+  id: number | string
+  name?: string
+  name_en?: string
+  name_ar?: string
+  price?: number
+  hasSizes?: boolean
+  isAvailableAlone?: boolean
+}
+
 interface Props {
   categories: Category[]
   onClose:    () => void
-  editItem?:  any | null   // لو موجود → وضع التعديل
+  editItem?:  EditableProduct | null   // لو موجود → وضع التعديل
 }
 
 const SIZE_NAMES = ['small', 'medium', 'large'] as const
@@ -20,20 +51,20 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
   const isEdit = !!editItem
 
   // القيم الابتدائية: من المنتج لو تعديل، فاضية لو إضافة
-  const [name, setName]               = useState(editItem?.name_en ?? editItem?.name ?? '')
-  const [nameAr, setNameAr]           = useState(editItem?.name_ar ?? '')
-  const [description, setDescription] = useState(editItem?.description_en ?? editItem?.description ?? '')
+  const [name, setName]               = useState<string>(editItem?.name_en ?? editItem?.name ?? '')
+  const [nameAr, setNameAr]           = useState<string>(editItem?.name_ar ?? '')
+  const [description, setDescription] = useState<string>(editItem?.description_en ?? editItem?.description ?? '')
   const [categoryId, setCategoryId]   = useState<number>(Number(editItem?.category_id ?? 0))
 
   const [hasSizes, setHasSizes] = useState<boolean>(
-    editItem ? (editItem.has_sizes ?? editItem.sizes?.length > 0) : false
+    editItem ? (editItem.has_sizes ?? (editItem.sizes?.length ?? 0) > 0) : false
   )
   const [basePrice, setBasePrice] = useState<string>(
     editItem && !editItem.has_sizes ? String(editItem.base_price ?? '') : ''
   )
   const [sizePrices, setSizePrices] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = { small: '', medium: '', large: '' }
-    editItem?.sizes?.forEach((s: any) => {
+    editItem?.sizes?.forEach((s) => {
       initial[s.size_name] = String(s.price)
     })
     return initial
@@ -41,13 +72,13 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
 
   // الإضافات المربوطة بالمنتج (IDs): من المنتج لو تعديل
   const [extraIds, setExtraIds] = useState<number[]>(() =>
-    (editItem?.extras ?? []).map((e: any) => Number(e.id))
+    (editItem?.extras ?? []).map((e) => Number(e.id))
   )
 
   // كل الإضافات الموجودة (المخزن العام)
-  const { data: allExtras = [] } = useQuery({
+  const { data: allExtras = [] } = useQuery<ExtraOption[]>({
     queryKey: ['admin-extras-all'],
-    queryFn: () => extraApi.getAll(),
+    queryFn: async () => (await extraApi.getAll()) as unknown as ExtraOption[],
   })
 
   const toggleExtraId = (id: number) =>
@@ -86,14 +117,14 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
 
   const mutation = useMutation({
     mutationFn: (data: FormData) =>
-      isEdit ? productApi.update(editItem.id, data) : productApi.create(data),
+      editItem ? productApi.update(editItem.id, data) : productApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
       onClose()
     },
-    onError: (err: any) => {
-      alert(err?.response?.data?.message ?? 'Failed to save item')
+    onError: (err: unknown) => {
+      alert(getErrorMessage(err, 'Failed to save item'))
     },
   })
 
@@ -114,7 +145,7 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
     // نحافظ على الوصف العربي الحالي عشان التعديل ما يمسحوش
     if (editItem?.description_ar) fd.append('description_ar', editItem.description_ar)
     // الإضافة: ظاهر. التعديل: نحافظ على حالة المنتج (مش نظهر منتج مخفي بالغلط)
-    fd.append('is_active', isEdit && editItem.is_active === false ? '0' : '1')
+    fd.append('is_active', editItem && editItem.is_active === false ? '0' : '1')
 
     if (hasSizes) {
       const sizes = SIZE_NAMES
@@ -241,7 +272,7 @@ export default function AddProductModal({ categories, onClose, editItem }: Props
               مفيش إضافات لسه. اعمل إضافة من صفحة Extras الأول.
             </p>
           ) : (
-            allExtras.map((ex: any) => {
+            allExtras.map((ex) => {
               const id = Number(ex.id)
               const label = ex.name_en || ex.name || ex.name_ar
               return (

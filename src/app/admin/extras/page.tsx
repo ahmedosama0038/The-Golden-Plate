@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-
+import { getErrorMessage } from '@/lib/errors'
 import type { Extra, ExtraSize } from '@/types'
 import TopBar from '@/components/admin/TopBar'
 import { toast } from '@/lib/toast'
@@ -113,10 +113,9 @@ export default function AdminExtrasPage() {
       toast.success(selectedExtra ? 'Extra updated successfully' : 'Extra added successfully')
       closeModal()
     },
-    onError: (err: any) => {
-      const errMsg = err.response?.data?.message || err.message
-      toast.error('Operation failed', typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg)
-    },
+   onError: (err: unknown) => {
+  toast.error('Operation failed', getErrorMessage(err, 'Operation failed'))
+},
   })
 
   // 3. حذف

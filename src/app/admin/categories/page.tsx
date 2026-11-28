@@ -6,7 +6,7 @@ import { categoryApi } from '@/lib/api'
 import type { Category } from '@/types'
 import TopBar from '@/components/admin/TopBar'
 import { toast } from '@/lib/toast'
-
+import { getErrorMessage } from '@/lib/errors'
 export default function AdminCategoryPage() {
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
@@ -39,11 +39,10 @@ export default function AdminCategoryPage() {
       toast.success(selectedCategory ? 'Category updated successfully' : 'Category added successfully')
       closeModal()
     },
-    onError: (err: any) => {
-      // لإظهار تفاصيل الأيرور لو السيرفر رجع رسالة معينة
-      const errMsg = err.response?.data?.message || err.message
-      toast.error('Operation failed', typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg)
-    }
+   onError: (err: unknown) => {
+  // لإظهار تفاصيل الأيرور لو السيرفر رجع رسالة معينة
+  toast.error('Operation failed', getErrorMessage(err, 'Operation failed'))
+},
   })
 
   // Mutation الحذف
@@ -54,9 +53,9 @@ export default function AdminCategoryPage() {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
       toast.success('Category deleted successfully')
     },
-    onError: (err: any) => {
-      toast.error('Failed to delete category')
-    }
+   onError: () => {
+  toast.error('Failed to delete category')
+},
   })
 
   const openModal = (category: Category | null = null) => {
