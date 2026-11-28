@@ -6,6 +6,7 @@ import { orderApi, reviewApi } from '@/lib/api'
 import { toast } from '@/lib/toast'
 import { useLang } from '@/lib/i18n'
 import type { ApiOrder } from '@/types'
+import { getErrorMessage, getErrorStatus } from '@/lib/errors'
 
 const PHONE_RE = /^01[0125][0-9]{8}$/
 
@@ -29,11 +30,11 @@ export default function ReviewForm({ onDone }: Props) {
   const alreadyReviewed = (orders ?? []).filter((o) => o.is_reviewed).length
 
   // رسالة الخطأ: 5xx أو من غير رد = الخدمة مشغولة، غير كده رسالة الباك أو احتياطية
-  const getErrMessage = (err: any, fallback: string) => {
-    const status = err?.response?.status
-    if (!status || status >= 500) return t('rv.err.busy')
-    return err?.response?.data?.message ?? fallback
-  }
+  const getErrMessage = (err: unknown, fallback: string) => {
+  const status = getErrorStatus(err)
+  if (!status || status >= 500) return t('rv.err.busy')
+  return getErrorMessage(err, fallback)
+}
 
   // ── 1) هات طلبات العميل بالتليفون ──
   const findOrders = useMutation({
@@ -44,10 +45,10 @@ export default function ReviewForm({ onDone }: Props) {
       const first = list.find((o) => o.can_review && !o.is_reviewed)
       setSelectedId(first ? first.id : null)
     },
-    onError: (err: any) => {
-      console.error('track failed:', err?.response?.status, err?.response?.data ?? err)
-      setError(getErrMessage(err, t('rv.err.fetch')))
-    },
+   onError: (err: unknown) => {
+  console.error('track failed:', getErrorStatus(err), err)
+  setError(getErrMessage(err, t('rv.err.fetch')))
+},
   })
 
   // ── 2) ابعت التقييم ──
@@ -66,10 +67,10 @@ export default function ReviewForm({ onDone }: Props) {
       toast.success(t('rv.thanks'))
       onDone?.()
     },
-    onError: (err: any) => {
-      console.error('review failed:', err?.response?.status, err?.response?.data ?? err)
-      setError(getErrMessage(err, t('rv.err.submit')))
-    },
+   onError: (err: unknown) => {
+  console.error('review failed:', getErrorStatus(err), err)
+  setError(getErrMessage(err, t('rv.err.submit')))
+},
   })
 
   const handleFind = () => {

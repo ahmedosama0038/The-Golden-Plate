@@ -1,7 +1,7 @@
 //  admin/reservations/page.tsx — حجوزات الطاولات (من باك )
 // ============================================================
 'use client'
-
+import { getErrorMessage } from '@/lib/errors'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import TopBar from '@/components/admin/TopBar'
@@ -42,9 +42,9 @@ export default function ReservationsPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
       toast.success('تم تحديث الحالة')
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message ?? 'تعذر تحديث الحالة')
-    },
+   onError: (err: unknown) => {
+  toast.error(getErrorMessage(err, 'تعذر تحديث الحالة'))
+},
   })
 
   const handleStatusChange = (order: ApiOrder, status: ApiOrderStatus) => {
