@@ -61,7 +61,8 @@ export default function AdminExtrasPage() {
     const file = e.target.files?.[0] ?? null
     if (!file) {
       setForm((f) => ({ ...f, imageFile: null }))
-      setPreview((selectedExtra as any)?.image ?? null)
+      // في handleImage
+setPreview(selectedExtra?.image ?? null)
       return
     }
     setCompressing(true)
@@ -133,11 +134,12 @@ export default function AdminExtrasPage() {
 
   const openModal = (extra: Extra | null = null) => {
     setSelectedExtra(extra)
-    setPreview((extra as any)?.image ?? null)
+  // في openModal
+setPreview(extra?.image ?? null)
     if (extra) {
       setForm({
         name: extra.name,
-        description: String((extra as any).description ?? ''),
+       description: extra.description ?? '',
         imageFile: null,
         hasSizes: !!extra.hasSizes,
         price: extra.hasSizes ? '' : String(extra.price ?? ''),

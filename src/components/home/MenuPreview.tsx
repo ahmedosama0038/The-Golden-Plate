@@ -7,22 +7,17 @@ import { useAnimate } from '@/hooks/useAnimate'
 import { useCart }    from '@/hooks/useCart'
 import { useLang, type DictKey } from '@/lib/i18n'
 import { productApi } from '@/lib/api'
-import type { MenuItem } from '@/types'
+import { pickLocalized } from '@/lib/localized'
+import type { ApiProduct, MenuItem } from '@/types'
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=60'
 
-function getSizePrices(sizes: any): number[] {
-  if (!sizes) return []
-  const list = Array.isArray(sizes) ? sizes : Object.values(sizes)
-  return list
-    .map((s: any) => Number(typeof s === 'object' && s !== null ? s.price : s))
-    .filter((n) => Number.isFinite(n) && n > 0)
-}
-
-function getPriceInfo(item: any, t: (k: DictKey) => string) {
+function getPriceInfo(item: ApiProduct, t: (k: DictKey) => string) {
   const currency = t('currency')
-  const sizePrices = getSizePrices(item.sizes)
-  const base = Number(item.base_price ?? item.price ?? 0)
+  const sizePrices = (item.sizes ?? [])
+    .map((s) => Number(s.price))
+    .filter((n) => Number.isFinite(n) && n > 0)
+  const base = Number(item.base_price ?? 0)
 
   if (sizePrices.length > 0) {
     const min = Math.min(...sizePrices)
@@ -36,7 +31,7 @@ function getPriceInfo(item: any, t: (k: DictKey) => string) {
 
 export default function MenuPreview() {
   const { addToCart } = useCart()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [localImages, setLocalImages] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -46,12 +41,12 @@ export default function MenuPreview() {
     } catch {}
   }, [])
 
-  const { data: products = [], isLoading, isError } = useQuery<any[]>({
+  const { data: products = [], isLoading, isError } = useQuery<ApiProduct[]>({
     queryKey: ['products'],
-      queryFn:  productApi.getActive,
+    queryFn:  productApi.getActive,
   })
 
- const featured = products.filter((p) => p.is_active !== false).slice(0, 4) 
+  const featured = products.filter((p) => p.is_active !== false).slice(0, 4)
 
   useAnimate([products])
 
@@ -87,12 +82,11 @@ export default function MenuPreview() {
           ) : (
             featured.map((item) => {
               const id          = String(item.id)
-              const name        = item.name        || t('menu.defaultName')
-              const description = item.description || t('menu.noDescription')
+              const name        = pickLocalized(item, 'name', lang) || t('menu.defaultName')
+              const description = pickLocalized(item, 'description', lang) || t('menu.noDescription')
               const { label, hasSizes, price } = getPriceInfo(item, t)
 
-              const rawImage   = item.image_url || item.image || item.itemImage || item.imageUrl
-              const backendSrc = typeof rawImage === 'string' && rawImage.length > 0 ? rawImage : ''
+              const backendSrc = typeof item.image === 'string' && item.image.length > 0 ? item.image : ''
               const itemImage  = localImages[id] || localImages[name] || backendSrc || FALLBACK_IMAGE
 
               return (
@@ -116,9 +110,9 @@ export default function MenuPreview() {
                     <div className="menu-card-footer">
                       <span className="item-price">{label}</span>
 
-                      {hasSizes ? (
+                      {hasSizes || (item.extras?.length ?? 0) > 0 ? (
                         <Link href="/menu" className="add-btn">
-                          <span>{t('menu.chooseSize')}</span>
+                          <span>{hasSizes ? t('menu.chooseSize') : t('menu.addToOrder')}</span>
                         </Link>
                       ) : (
                         <button
